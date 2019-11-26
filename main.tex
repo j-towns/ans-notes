@@ -1,0 +1,186 @@
+\documentclass{article}
+
+\usepackage{hyperref}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\newcommand\given{\,\vert\,}
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+
+\usepackage[style=authoryear, date=year, natbib=true, maxcitenames=2,
+            maxbibnames=10, uniquelist=false]{biblatex}
+\setlength\bibitemsep{1.5\itemsep}
+\DeclareFieldFormat[article, book, inbook, incollection, inproceedings, misc,
+                    thesis, unpublished, techreport, phdthesis]{title}{#1}
+\DeclareNameAlias{sortname}{family-given}
+\addbibresource{ans-notes.bib}
+\renewcommand*{\intitlepunct}{\space}
+
+\usepackage{cleveref}
+
+\newtheorem{problem}{Problem}
+
+\usepackage{siunitx}
+\DeclareSIUnit[parse-numbers=false]\bit{bits}
+\newcommand\bits{\,\si\bit}
+
+\usepackage{listings}
+\lstset{language=Python, mathescape=true, columns=flexible, xleftmargin=0.9cm}
+
+\author{James Townsend}
+\title{Notes on asymmetric numeral systems}
+
+\begin{document}
+\maketitle
+\section{Introduction}
+We are interested in algorithms for lossless compression of sequences of data.
+The range variant of asymmetric numeral systems (ANS) is such an algorithm,
+and, like arithmetic coding (AC), it is close to optimal in terms of
+compression rate \citep{dudaAsymmetricNumeralSystems2009}. The key difference
+between ANS and AC is that ANS is last-in-first-out (LIFO), while AC is
+first-in-first-out (FIFO).
+
+ANS comprises two functions, which we denote $C$ and $D$, for encoding and
+decoding, respectively. $C$ accepts some pre-compressed information $m$, and a
+symbol $x$ to be compressed, and returns a piece of compressed information,
+$m'$. Thus it has the signiature
+
+\begin{equation}
+        C:(m, x) \mapsto m'.
+\end{equation}
+
+The new compressed state, $m'$, contains precisely the same information as the
+pair $(m, x)$, and thus $C$ can be inverted, giving a decoder mapping. We use
+$D$ to denote the decoder, which maps from $m'$ back to $m, x$:
+
+\begin{equation}
+        D:m' \mapsto (m, x).
+\end{equation}
+
+$C$ and $D$ are inverse to one another, so $C(D(m)) = m$ and $D(C(m,
+x)) = (m, x)$. Encoding and decoding require computation of a mass function $P$
+over symbols, and when we want to be explicit about this we use $C_P$ and $D_P$
+for encoding and decoding (resp.) according to $P$.
+
+%TODO: intro more/better notation for prob distro
+
+\section{Building an encoder/decoder pair}
+The problem which the ANS encoder $C$ solves is
+
+\begin{problem}\label{prob:default}
+        Given a sequence of random variables $X_1, \ldots, X_T$, find an
+        invertible algorithm $C$ which will map any sample $x_1, \ldots, x_T$
+        to a binary message $b$, such that the length of $b$ is close to the
+        information content $h(x_1, \ldots, x_T)$.
+\end{problem}
+
+Since $C$ is invertible, we can reformulate \Cref{prob:default} in terms of
+$C$'s inverse, $D$. This leads to a different, but equivalent, problem
+statement:
+
+\begin{problem}\label{prob:alt}
+        Given a sequence of random variables $X_1, \ldots, X_T$, find an
+        invertible algorithm $D$ which maps a source of bits to a sequence
+        $x_1, \ldots, x_T$, such that the number of bits observed is close to
+        the information content $h(x_1, \ldots, x_T)$.
+\end{problem}
+
+Our description of the details of ANS focuses on the decoder, because this
+leads to a more straightforward presentation. Having described $D$ and shown
+that it solves \Cref{prob:alt}, we then show how to invert it to form $C$.
+
+% TODO: We also describe the inverse procedure, checking that it is
+% computationally tractible.
+
+\subsection{The structure of $m$}
+We use a pair $m = (s, t)$ as the data structure for $m$. The element $t$ is a
+stack of unsigned integers of some fixed precision $r_t$. This stack has push
+and pop operations. The element $s$ is an unsigned integer with precision $r_s$
+where $r_s > r_t$. In our implementation we use $r_t = 32$ and $r_s = 64$. The
+stack $t$, along with its pop operation, can model the `source of bits' from
+our problem statement above.
+% TODO: Diagram of $m$
+
+\subsection{How $D$ works}
+Our strategy for performing a decode $D$ will be to firstly extract a symbol
+from $s$. We do this using a bijective function $d:\mathbb N\rightarrow\mathbb
+N\times\mathcal{A}$, which takes an integer $s$ as input and returns a pair
+$(s', x)$, where $s'$ is an integer and $x$ is a symbol. We design $d$ so that
+
+\begin{equation}\label{eq:inner-decoder}
+\log s' \approx \log s - h(x).
+\end{equation}
+
+See \Cref{sec:inner-decoder} for details on $d$, where we make precise the
+approximation in \cref{eq:inner-decoder} and show that for large $s$ the
+approximation is extremely accurate.
+
+We require that the approximation \cref{eq:inner-decoder} is accurate, and thus
+that $s$ remains sufficiently `large'. Thus, after extracting a symbol using
+$d$, we check whether $s$ is below a certain threshold, and if it is we pop an
+integer from $t$ and push its contents into the lower order bits of $s$,
+increasing the size of $s$. We refer to this as `renormalization'.  To be
+precise, we apply the following function:
+
+%TODO: Change if to while loop
+\begin{lstlisting}
+def renorm($s$, $t$):
+    while $s < 2^{r_s - r_t}$:
+        $s_{\text{new}}$, $t$ = pop($t$)
+        $s$ = $2^{r_t} \cdot s$ + $s_{\text{new}}$
+    return $s$, $t$
+\end{lstlisting}
+
+The condition $s < 2^{r_s - r_t}$ guarantees that $2^{r_t} \cdot s +
+s_{\text{new}} < 2^{r_s}$, and thus there is no loss of information resulting
+from overflow. In the case $s \geq 2^{r_s - r_t}$, clearly $\text{renorm}(s, t)
+\equiv (s, t)$. For the case $s < 2^{r_s - r_t}$, we have
+\begin{align}
+        \log (2^{r_t} \cdot s + s_\text{new})
+        &= r_t + \log s + \log\left(1 + \frac{s_\text{new}}{2^{r_t} \cdot
+                s}\right)\\
+        &\leq r_t + \log s + \frac{s_\text{new}}{2^{r_t} \cdot s\ln 2}\\
+        &\leq r_t + \log s + \epsilon
+\end{align}
+where $\epsilon := \frac{1}{s\ln 2}$. This implies that the quantity
+\begin{equation}
+\log s - r_t\cdot\left[\text{\# elements popped from $t$}\right]
+\end{equation}
+is approximately preserved by renorm.
+%TODO: more detail here.
+
+Using $d$ and our $renorm$ function, we can describe the whole of the decoder
+$D$:
+
+\begin{lstlisting}
+def $D$($s$, $t$):
+    $s$, $x$   $=$ $d$($s$)
+    $s$, $t$   $=$ renorm($s$, $t$)
+    return ($s$, $t$), $x$
+\end{lstlisting}
+If $(s', t'), x = D(s, t)$, then we have
+\begin{equation}\label{eq:ans-approx}
+        \log s' + h(x) - r_t\cdot\left[\text{\# elements popped from $t$}\right]
+        \approx \log s.
+\end{equation}
+If we apply $D$ many times to decode a sequence of symbols,
+\cref{eq:ans-approx} can be applied recursively. Denote the decoded symbols
+$x_1, \ldots, x_N$, $s, t$ the coder state before decoding and $s', t'$ the
+state after decoding, then
+\begin{equation}
+        \log s' + \sum_{n=1}^Nh(x_n) - r_t\cdot\left[\text{\# elements popped
+        from $t$}\right] \approx \log s.
+\end{equation}
+and in particular
+\begin{align}
+         r_t\cdot\left[\text{\# elements popped
+         from $t$}\right] &\approx \sum_{n=1}^Nh(x_n) + \log s' - \log s\\
+                          &\leq \sum_{n=1}^Nh(x_n) + r_t
+\end{align}
+%TODO: convert from \approx to = with epsilon
+which implies that the scheme solves the original problem statement.
+\subsection{The function $d$}\label{sec:inner-decoder}
+\printbibliography
+
+\end{document}
