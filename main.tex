@@ -2,6 +2,14 @@
 
 \usepackage{hyperref}
 
+\usepackage{color}
+
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\include{bar_figs}
+
+\usepackage{booktabs}
+
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{mathtools}
@@ -17,16 +25,15 @@
 \addbibresource{ans-notes.bib}
 \renewcommand*{\intitlepunct}{\space}
 
-\usepackage{cleveref}
-
-\newtheorem{problem}{Problem}
-
 \usepackage{siunitx}
 \DeclareSIUnit[parse-numbers=false]\bit{bits}
 \newcommand\bits{\,\si\bit}
 
 \usepackage{listings}
 \lstset{language=Python, mathescape=true, columns=flexible, xleftmargin=0.9cm}
+
+\usepackage{cleveref}
+\newtheorem{problem}{Problem}
 
 \author{James Townsend}
 \title{Notes on asymmetric numeral systems}
@@ -47,15 +54,15 @@ symbol $x$ to be compressed, and returns a piece of compressed information,
 $m'$. Thus it has the signiature
 
 \begin{equation}
-        C:(m, x) \mapsto m'.
+  C:(m, x) \mapsto m'.
 \end{equation}
 
 The new compressed state, $m'$, contains precisely the same information as the
-pair $(m, x)$, and thus $C$ can be inverted, giving a decoder mapping. We use
-$D$ to denote the decoder, which maps from $m'$ back to $m, x$:
+pair $(m, x)$, and therefore $C$ can be inverted, giving a decoder mapping. The
+decoder, $D$, maps from $m'$ back to $m, x$:
 
 \begin{equation}
-        D:m' \mapsto (m, x).
+  D:m' \mapsto (m, x).
 \end{equation}
 
 $C$ and $D$ are inverse to one another, so $C(D(m)) = m$ and $D(C(m,
@@ -93,7 +100,7 @@ that it solves \Cref{prob:alt}, we then show how to invert it to form $C$.
 % TODO: We also describe the inverse procedure, checking that it is
 % computationally tractible.
 
-\subsection{The structure of $m$}
+\subsection*{The structure of $m$}
 We use a pair $m = (s, t)$ as the data structure for $m$. The element $t$ is a
 stack of unsigned integers of some fixed precision $r_t$. This stack has push
 and pop operations. The element $s$ is an unsigned integer with precision $r_s$
@@ -102,7 +109,7 @@ stack $t$, along with its pop operation, can model the `source of bits' from
 our problem statement above.
 % TODO: Diagram of $m$
 
-\subsection{How $D$ works}
+\subsection*{How $D$ works}
 Our strategy for performing a decode $D$ will be to firstly extract a symbol
 from $s$. We do this using a bijective function $d:\mathbb N\rightarrow\mathbb
 N\times\mathcal{A}$, which takes an integer $s$ as input and returns a pair
@@ -112,18 +119,17 @@ $(s', x)$, where $s'$ is an integer and $x$ is a symbol. We design $d$ so that
 \log s' \approx \log s - h(x).
 \end{equation}
 
-See \Cref{sec:inner-decoder} for details on $d$, where we make precise the
+See below for details on $d$, where we make precise the
 approximation in \cref{eq:inner-decoder} and show that for large $s$ the
 approximation is extremely accurate.
 
 We require that the approximation \cref{eq:inner-decoder} is accurate, and thus
 that $s$ remains sufficiently `large'. Thus, after extracting a symbol using
 $d$, we check whether $s$ is below a certain threshold, and if it is we pop an
-integer from $t$ and push its contents into the lower order bits of $s$,
+integer from $t$ and move its contents into the lower order bits of $s$,
 increasing the size of $s$. We refer to this as `renormalization'.  To be
 precise, we apply the following function:
 
-%TODO: Change if to while loop
 \begin{lstlisting}
 def renorm($s$, $t$):
     while $s < 2^{r_s - r_t}$:
@@ -180,7 +186,27 @@ and in particular
 \end{align}
 %TODO: convert from \approx to = with epsilon
 which implies that the scheme solves the original problem statement.
-\subsection{The function $d$}\label{sec:inner-decoder}
-\printbibliography
 
+\subsection*{The function $d$}\label{sec:inner-decoder}
+The function $d:\mathbb{N}\rightarrow\mathbb{N}\times\mathcal{A}$ must be a
+bijection. Bijections of this form can be visualised using Cartesian axes, with
+the elements of $\mathcal{A}$ on the horizontal axis and the elements of
+$\mathbb{N}$ on the vertical. Each element $s\in\mathbb{N}$ is then positioned
+in two dimensional space according to the coordinates given by $s', x = d(s)$.
+The middle and right plots in \cref{fig:visual-ans} show the mapping $d$ for a
+particular probability distribution $P$ which is shown in the left plot.
+\begin{figure}[t]
+  \centering
+  \drawpmf \quad \drawapprox{20}{\small} \quad \drawapprox{70}{\tiny}
+  \caption{
+    Showing the pmf of a distribution over symbols (left) and the
+    approximations to that distribution implied by ANS for $s=20$ and $s=70$
+    (middle and right, respectively).}\label{fig:visual-ans}
+\end{figure}
+
+We aim for $d$ to satisfy \cref{eq:ans-approx}, and thus $P(x)\approx
+\frac{s'}{s}$. This can be achieved by ensuring that numbers which decode to $x$
+are distributed \emph{within the natural numbers} with density close to $P(x)$.
+
+\printbibliography
 \end{document}
