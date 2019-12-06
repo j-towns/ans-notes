@@ -6,7 +6,7 @@
 
 \usepackage{tikz}
 \usetikzlibrary{calc}
-\include{bar_figs}
+\include{figs}
 
 \usepackage{booktabs}
 
@@ -205,8 +205,19 @@ particular probability distribution $P$ which is shown in the left plot.
 \end{figure}
 
 We aim for $d$ to satisfy \cref{eq:ans-approx}, and thus $P(x)\approx
-\frac{s'}{s}$. This can be achieved by ensuring that numbers which decode to $x$
-are distributed \emph{within the natural numbers} with density close to $P(x)$.
+\frac{s'}{s}$. This can be achieved by ensuring that numbers which decode to a
+symbol $x$ are distributed \emph{within the natural numbers} with density close
+to $P(x)$.
+
+Achieving this is actually fairly straightforward. We assume that probabilities
+$p_1, \ldots, p_I$ are quantized to some precision $r_p$, i.e.  that there
+exist $m_i\in\{1,\ldots,2^{r_p}\}$ such that $p_i = \frac{m_i}{2^{r_p}}$ for
+each $i=1,\ldots,I$. This may require rounding of $p_i$ but for large enough
+$r_p$ the effect of this is negligable. To extract a symbol from $s$ we look at
+the value of $\tilde s := s \mod r_p$ (the remainder when $s$ is divided by
+$r_p$). We use the range $\{0, 1,\ldots,2^{r_p}\}$ as a model for the interval
+[0, 1] and decide on which symbol to produce based on the position of $\tilde
+s$ within this interval (see
 
 \printbibliography
 \end{document}
