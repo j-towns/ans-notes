@@ -195,6 +195,17 @@ $\mathbb{N}$ on the vertical. Each element $s\in\mathbb{N}$ is then positioned
 in two dimensional space according to the coordinates given by $s', x = d(s)$.
 The middle and right plots in \cref{fig:visual-ans} show the mapping $d$ for a
 particular probability distribution $P$ which is shown in the left plot.
+\begin{figure}
+  \centering
+  \drawinterval
+  \caption{
+    Showing how the interval $[0, 1]$ is modelled by the set of integers $\{0,
+    1, \ldots, 2^{r_p} - 1\}$. In this case $r_p = 3$ and the probabilities of
+    each symbol are $P(a) = 0.125$, $P(b) = 0.25$, $P(c) = 0.375$ and $P(d) =
+    0.25$.
+  }
+\end{figure}
+
 \begin{figure}[t]
   \centering
   \drawpmf \quad \drawapprox{20}{\small} \quad \drawapprox{70}{\tiny}
@@ -212,9 +223,9 @@ to $P(x)$.
 Achieving this is actually fairly straightforward. We assume that probabilities
 $p_1, \ldots, p_I$ are quantized to some precision $r_p$, i.e.  that there
 exist $m_i\in\{1,\ldots,2^{r_p}\}$ such that $p_i = \frac{m_i}{2^{r_p}}$ for
-each $i=1,\ldots,I$. This may require rounding of $p_i$ but for large enough
+each $i=1,\ldots,I$. This may require rounding of $p_i$, but for large enough
 $r_p$ the effect of this is negligable. To extract a symbol from $s$ we look at
-the value of $\tilde s := s \mod r_p$ (the remainder when $s$ is divided by
+the value of $\tilde s := s \bmod r_p$ (the remainder when $s$ is divided by
 $r_p$). We use the range $\{0, 1,\ldots,2^{r_p}\}$ as a model for the interval
 [0, 1] and decide on which symbol to produce based on the position of $\tilde
 s$ within this interval (see

@@ -70,3 +70,12 @@
   }
 \end{tikzpicture}
 }
+
+\newcommand{\intervalwidth}{0.8\textwidth}
+\newcommand{\drawinterval}{
+\begin{tikzpicture}
+  \draw (0, 0) -- (\intervalwidth, 0);
+  \draw (0, 0) -- (0, 4pt) node [anchor=south] {$0$};
+  \draw (\intervalwidth, 0) -- (\intervalwidth, 4pt) node [anchor=south] {$1$};
+\end{tikzpicture}
+}
