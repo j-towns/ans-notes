@@ -1,6 +1,7 @@
 \usetikzlibrary{math}
 
-\newcommand{\barwidth}{.5cm}
+\newlength{\barwidth}
+\setlength{\barwidth}{0.5cm}
 
 \newcommand{\drawaxes}[1]{
   \draw [->] (-.2, 0) -> (4 * \barwidth + .2cm, 0) node[anchor=west] {$x$};
@@ -16,16 +17,22 @@
   (\barwidth + #1, 0);
 }
 
+% \font\nullfont=cmr10
+% \tracinglostchars=2
+% \tracingcommands=1
+% \tracingmacros=1
+
 \newcommand{\drawpmf}{
 \begin{tikzpicture}
   \drawaxes{P(x)}
-  \foreach \y in {0.125, 0.25, 0.375}
+  \foreach \y in {0.125, 0.25, 0.375}{
     \draw (-.2cm - 1pt, 12.5 * \y) node[anchor=east] {$\y$}
       --  (-.2cm + 1pt, 12.5 * \y);
-  \drawbar{0 * \barwidth}{0.125}{};
-  \drawbar{1 * \barwidth}{0.25 }{};
-  \drawbar{2 * \barwidth}{0.375}{};
-  \drawbar{3 * \barwidth}{0.25 }{};
+  }
+  \drawbar{0\barwidth}{0.125}{}
+  \drawbar{1\barwidth}{0.25 }{}
+  \drawbar{2\barwidth}{0.375}{}
+  \drawbar{3\barwidth}{0.25 }{}
 \end{tikzpicture}
 }
 
@@ -51,13 +58,14 @@
         if \snew>#1 then {\toprint = \snew;} else {let \toprint = ;};
         }
       \draw ($6.25/\splus*(0, -1) + 0.45*(\barwidth,0)
-      + \s*(0, 12.5 / \splus) + \x*(\barwidth, 0)$) node [text=lightgray] {#2 $\toprint$};
+      + \s*(0, 12.5 / \splus) + \x*(\barwidth, 0)$)
+      node [text=lightgray] {#2 $\toprint$};
     }
   }
-  \drawbar{0 * \barwidth}{0.125}{thin, gray};
-  \drawbar{1 * \barwidth}{0.25} {thin, gray};
-  \drawbar{2 * \barwidth}{0.375}{thin, gray};
-  \drawbar{3 * \barwidth}{0.25} {thin, gray};
+  \drawbar{0\barwidth}{0.125}{thin, gray}
+  \drawbar{1\barwidth}{0.25} {thin, gray}
+  \drawbar{2\barwidth}{0.375}{thin, gray}
+  \drawbar{3\barwidth}{0.25} {thin, gray}
   \foreach \x/\freq/\start in {0/1/0, 1/2/1, 2/3/3, 3/2/6}{
     \foreach \y [parse=true, count=\s] in {\yunit, 2 * \yunit, ..., 5.2}{
       \tikzmath{
@@ -71,11 +79,66 @@
 \end{tikzpicture}
 }
 
-\newcommand{\intervalwidth}{0.8\textwidth}
+\newlength{\intervalwidth}
+\setlength{\intervalwidth}{0.7\textwidth}
+
+\newlength{\gap}
+\setlength{\gap}{0.15cm}
+
+\newlength{\lineheight}
+\setlength{\lineheight}{0.45cm}
 \newcommand{\drawinterval}{
 \begin{tikzpicture}
-  \draw (0, 0) -- (\intervalwidth, 0);
-  \draw (0, 0) -- (0, 4pt) node [anchor=south] {$0$};
-  \draw (\intervalwidth, 0) -- (\intervalwidth, 4pt) node [anchor=south] {$1$};
+  \draw (-30pt, 0) node [anchor=east] {$s$};
+  \draw (0, -.5\lineheight) -- (0, .5\lineheight);
+  \draw (\intervalwidth, -.5\lineheight) -- (\intervalwidth, .5\lineheight);
+  \foreach \s in {1, ..., 7}{
+    \draw (\s * 0.125 * \intervalwidth, -.5\lineheight)
+      -- (\s * 0.125 * \intervalwidth, .5\lineheight);
+  }
+  \foreach \y in {0, ..., 7}{
+    \tikzmath{
+      \x = (\y * 0.125 + 0.0625);
+      \r = int(\y + 64);
+    }
+    \draw (\x\intervalwidth, 0) node {$\r$};
+  }
+
+  \draw (-30pt, -\lineheight -\gap) node [anchor=east] {$s \bmod 2^{r_p}$};
+  \draw (0, -.5\lineheight - \gap) -- (0, -1.5\lineheight -\gap);
+  \draw (\intervalwidth, -.5\lineheight - \gap)
+    -- (\intervalwidth, -1.5\lineheight - \gap);
+  \foreach \s in {1, ..., 7}{
+    \draw (\s * 0.125 * \intervalwidth, -.5\lineheight - \gap)
+      -- (\s * 0.125 * \intervalwidth, -1.5\lineheight - \gap);
+  }
+  \foreach \s in {0, ..., 7}{
+    \tikzmath{
+      \x = (\s * 0.125 + 0.0625);
+    }
+    \draw (\x\intervalwidth, -\lineheight - \gap) node  {$\s$};
+  }
+
+  \draw (-30pt, -2\gap - 2\lineheight) node [anchor=east] {$x$};
+  \draw (0, -2\gap - 1.5\lineheight) -- (0, -2\gap - 2.5\lineheight - 6pt);
+  \draw (\intervalwidth, -2\gap - 1.5\lineheight)
+    -- (\intervalwidth, -2\gap - 2.5\lineheight - 6pt);
+  \draw (0, -2\gap - 2.5\lineheight - 6pt) node [anchor=north] {$0$};
+  \draw (\intervalwidth, -2\gap - 2.5\lineheight - 6pt) node [anchor=north] {$1$};
+  \draw (0.125  \intervalwidth, -2\gap - 1.5\lineheight)
+    -- (0.125 * \intervalwidth, -2\gap - 2.5\lineheight);
+  \draw (0.375  \intervalwidth, -2\gap - 1.5\lineheight)
+    -- (0.375 * \intervalwidth, -2\gap - 2.5\lineheight);
+  \draw (0.75  \intervalwidth, -2\gap - 1.5\lineheight)
+    -- (0.75 * \intervalwidth, -2\gap - 2.5\lineheight);
+  \draw (0.06125\intervalwidth, -2\gap - 2\lineheight)
+    node [text height=1ex] {$a$};
+  \draw (0.25   \intervalwidth, -2\gap - 2\lineheight)
+    node [text height=1ex] {$b$};
+  \draw (0.5625 \intervalwidth, -2\gap - 2\lineheight)
+    node [text height=1ex] {$c$};
+  \draw (0.875  \intervalwidth, -2\gap - 2\lineheight)
+    node [text height=1ex] {$d$};
+
 \end{tikzpicture}
 }
