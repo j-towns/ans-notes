@@ -46,8 +46,11 @@
 \newcommand{\push}{\texttt{push}}
 \newcommand{\pop}{\texttt{pop}}
 
-\author{James Townsend}
-\title{Notes on asymmetric numeral systems}
+\author{
+  James Townsend\\
+  University College London
+}
+\title{A tutorial on the range variant of asymmetric numeral systems}
 
 \begin{document}
 \maketitle
@@ -104,10 +107,10 @@ statement:
   \ldots, x_N)$.
 \end{problem}
 
-Our description of the details of ANS focuses on the decoder, because this
-leads to a more straightforward presentation. Having described the decoder and
-shown that it solves \Cref{prob:alt}, we then show how to invert it to form an
-encoder.
+Our description of the details of ANS focuses on the decoding algorithm,
+because this leads to a more straightforward presentation. We describe the
+decoder and show that it solves \Cref{prob:alt}, then we show how to invert it
+to form an encoder.
 
 The decoding algorithm we describe will be formed from a series of ANS \pop\
 operations, its inverse will be formed from ANS \push\ operations.
@@ -132,7 +135,7 @@ Thus \pop\ begins
 def pop($s$, $t$):
     $s'$, $x= d(s)$
 \end{lstlisting}
-We design the function $d$ so that
+We design the function $d$ so that if $s\geq 2^{r_s - r_t}$, then
 \begin{equation}\label{eq:inner-decoder}
   \log s'\geq\log s - h(x) + \log (1 - \epsilon)
 \end{equation}
@@ -140,8 +143,8 @@ where $\epsilon := 2^{r_p + r_t - r_s}$. We give details of $d$ and prove
 \cref{eq:inner-decoder} below. Note that for small $\epsilon$ we have $\log (1
 - \epsilon) \approx -\frac{\epsilon}{\ln2}$, and thus this term is small.
 
-After extracting a symbol using $d$, we check whether $s'$ is below a certain
-threshold, and if it is we \texttt{stack\_pop} an integer from $t$ and move its
+After extracting a symbol using $d$, we check whether $s'$ is below $2^{r_s -
+r_t}$, and if it is we \texttt{stack\_pop} an integer from $t$ and move its
 contents into the lower order bits of $s'$, increasing the size of $s'$. We
 refer to this as `renormalization'. Having done this, we return the new message
 and the symbol $x$. The full definition of \pop\ is thus
@@ -152,10 +155,11 @@ def pop($s$, $t$):
     return ($s$, $t$), $x$
 \end{lstlisting}
 
-Renormalization is necessary to ensure that the $s$ returned is large enough
-for any future \pop\ operation. The \texttt{renorm} function has a while loop,
-which pushes elements from $t$ into the lower order bits of $s$ until $s$ is
-full to capacity. To be precise:
+Renormalization is necessary to ensure that the $s$ returned is large enough to
+ensure that \cref{eq:inner-decoder} holds at the start of any future \pop\
+operation. The \texttt{renorm} function has a while loop, which pushes elements
+from $t$ into the lower order bits of $s$ until $s$ is full to capacity. To be
+precise:
 
 \begin{lstlisting}
 def renorm($s$, $t$):
@@ -175,35 +179,54 @@ resulting from overflow. We also have
 \begin{equation}
   \log (2^{r_t} \cdot s + t_\text{top}) \geq r_t + \log s.
 \end{equation}
-Applying this repeatedly, once for each iteration of the while loop in
-\texttt{renorm}, we have
+Applying this inequality repeatedly, once for each iteration of the while loop
+in \texttt{renorm}, we have
 \begin{equation}\label{eq:renorm}
 \log s \geq \log s' + r_t\cdot\left[\text{\# elements popped from $t$}\right]
 \end{equation}
-where $s, t = \texttt{renorm}(s', t)$ as in the definition of \pop. Plugging
-\cref{eq:inner-decoder} into \cref{eq:renorm} gives
-\begin{equation}
-  \log s_{n+1} \geq \log s_n - h(x_n)
-  + b_n + \log (1 -
-  \epsilon)
+where $s, t = \texttt{renorm}(s', t)$ as in the definition of \pop.
+
+\subsection*{Popping in sequence}
+We now directly tackle the setup described in \Cref{prob:alt}, performing a
+sequence of \pop\ operations to decode a sequence of data. We suppose that we
+are given some initial `message' $m_0= (s_0, t_0)$, where $2^{r_s - r_t} \leq
+s_0 < 2^{r_s}$ and $t_0$ is a stack of infinite depth, modelling the `source of
+bits' from the problem statement.
+
+For $n=1\ldots N$, we let $(s_n, t_n), x_n = \pop(s_{n-1}, t_{n-1})$, where
+each \pop\ operation uses the corresponding distribution $P(x_n\given
+x_1,\ldots,x_{n-1})$.
+
+Now, applying \cref{eq:inner-decoder} and \cref{eq:renorm} to the
+$n^\mathrm{th}$ \pop\ gives
+\begin{equation}\label{eq:recursion}
+  \log s_{n+1} \geq \log s_n - h(x_n\given x_1,\ldots,x_{n-1}) + b_n + \log (1
+  - \epsilon)
 \end{equation}
 
-If we apply $D$ many times to decode a sequence of symbols,
-\cref{eq:ans-approx} can be applied recursively. Denote the decoded symbols
-$x_1, \ldots, x_N$, $s, t$ the coder state before decoding and $s', t'$ the
-state after decoding, then
+where $b_n$ is the number of bits popped/observed from the stack $t$ in the
+$n^{\mathrm{th}}$ \pop\ step. Applying \cref{eq:recursion} recursively, for
+$n=1,\ldots, N$, yields
 \begin{equation}
-        \log s' + \sum_{n=1}^Nh(x_n) - r_t\cdot\left[\text{\# elements popped
-        from $t$}\right] \approx \log s.
+  \log s_N \geq \log s_0 - h(x_1, \ldots, x_N) + \sum_{n=1}^{N} b_n +
+  N\log(1-\epsilon)
 \end{equation}
-and in particular
-\begin{align}
-         r_t\cdot\left[\text{\# elements popped
-         from $t$}\right] &\approx \sum_{n=1}^Nh(x_n) + \log s' - \log s\\
-                          &\leq \sum_{n=1}^Nh(x_n) + r_t
-\end{align}
-%TODO: convert from \approx to = with epsilon
-which implies that the scheme solves the original problem statement.
+which can be rearranged to give
+\begin{equation}
+  \sum_{n=1}^Nb_n \leq h(x_1, \ldots, x_N) - N\log(1-\epsilon) + r_t
+  \approx h(x_1, \ldots, x_N) + N\epsilon + r_t
+\end{equation}
+since $\log(1 - \epsilon)\approx\epsilon$ for small $\epsilon$ and $\log s_N -
+\log s_0 < r_t$. Thus rANS solves \cref{prob:alt}: the number of bits observed
+from $t$ is `close' to $h(x_1,\ldots,x_N)$ in the sense that the difference is
+no more than an additive constant, $r_t$, plus a term which grows linearly with
+$N$, but with a very small coefficient $\epsilon$. In our implementation we use
+$r_p = 16$ or less, and thus $\epsilon \leq \frac{2^{16 + 32 - 64}}{\ln 2}
+\approx 2.2\times 10^{-5}$.
+
+It now remains for us to describe the function $d$ and show that it satisfies
+\cref{eq:inner-decoder}, as well as showing how to invert \pop\ to form an
+encoder.
 
 \subsection*{The function $d$}\label{sec:inner-decoder}
 The function $d:\mathbb{N}\rightarrow\mathbb{N}\times\mathcal{A}$ must be a
@@ -230,20 +253,21 @@ To do this, we partition $\mathbb{N}$ into finite ranges of equal length, and
 treat each range as a model for the interval $[0, 1]$, with sub-intervals
 within $[0, 1]$ corresponding to each symbol, and the width of each
 sub-interval being equal to the corresponding symbol's probability (see
-\cref{fig:interval}).  More precisely, we assume that probabilities $p_1,
-\ldots, p_I$ are quantized to some precision $r_p$, i.e.  that there exist
-$m_i\in\{1,\ldots,2^{r_p}\}$ such that $p_i = \frac{m_i}{2^{r_p}}$ for each
-$i=1,\ldots,I$. This may require rounding of $p_i$, but for large enough $r_p$
-the effect of this is negligable. The mapping $\tilde d$ can then be expressed
-as a composition $\tilde d = \tilde d_2 \circ \tilde d_1$, where $\tilde d_1$
-does the partitioning described above, and $\tilde d_2$ assigns numbers within
-each partition to symbols. Formally
+\cref{fig:interval}). To be precise, the mapping $\tilde d$ can then be
+expressed as a composition $\tilde d = \tilde d_2 \circ \tilde d_1$, where
+$\tilde d_1$ does the partitioning described above, and $\tilde d_2$ assigns
+numbers within each partition to symbols (sub-intervals). So
 \begin{equation}
   \tilde d_1(s) := s \bmod 2^{r_p}.
 \end{equation}
-Using the shorthand $\bar{s} := \tilde d_1 (a)$, and letting $c_i :=
-\sum_{j=1}^i m_j$ denote the (quantized) cumulative probability of symbol
-$a_i$,
+Using the shorthand $\bar{s} := \tilde d_1 (a)$, and defining
+\begin{equation}
+  c_j := \begin{cases}
+    0                    &\quad\text{if }j=1\\
+    \sum_{k=1}^{j-1} p_k &\quad\text{if }j=2,\ldots,I
+  \end{cases}
+\end{equation}
+as the (quantized) cumulative probability of symbol $a_{j-1}$,
 \begin{equation}
   \tilde d_2(\bar s) := a_i\text{ where }i := \max \{j : c_j \leq \bar s\}.
 \end{equation}
@@ -270,69 +294,120 @@ distribution, for the range $s = 64,\ldots, 71$.
     of the mapping $d$ (middle and right).  Numbers less than or equal to $s$
     are shown in bold, for $s=20$ and $s=70$ (middle and right, respecitively),
     and the ratio in \cref{eq:ratio} can be seen to approach the histogram in
-    the left hand plot.}\label{fig:visual-ans}
+    the left hand plot.
+  }\label{fig:visual-ans}
 \end{figure}
 
 \subsection*{Computing $s'$}
 The number $s'$ was defined above as `the index of $s$ within the (ordered) set
 $\tilde d^{-1}(x)$, with indices starting at $0$'. We now derive an expression
-for $s'$ in terms of $s$, $m_i$ and $c_i$, where $i = \max\{j: c_j\leq \bar
-s\}$ (as above), and we formalise \cref{eq:inner-decoder}.
+for $s'$ in terms of $s$, $p_i$ and $c_i$, where $i = \max\{j: c_j \leq \bar
+s\}$ (as above), and we prove \cref{eq:inner-decoder}.
 
 Our expression for $s'$ is a sum of two terms. The first term counts the entire
-intervals, corresponding to $a_i$, which are below $s$. This is equal to $m_i
+intervals, corresponding to $a_i$, which are below $s$. This is equal to $p_i
 \cdot (s \div 2^{r_p})$, where $\div$ denotes \emph{integer} division,
 discarding any remainder. The second term counts our position within the
 current inverval, which is $\bar s - c_i \equiv s\bmod 2^{r_p} - c_i$. Thus
-\begin{equation}
-  s' = m_i \cdot (s \div 2^{r_p}) + s\bmod 2^{r_p} - c_i.
+\begin{equation}\label{eq:s' def}
+  s' = p_i \cdot (s \div 2^{r_p}) + s\bmod 2^{r_p} - c_i.
 \end{equation}
-This expression is straightforward to compute. Moreover it is straightforward
-to show that the ratio $\frac{s'}{s}$ is bounded below:
+This expression is straightforward to compute. Moreover from this expression it
+is straightforward to prove \cref{eq:inner-decoder}. Firstly, taking the $\log$
+of both sides of \cref{eq:s' def} and using the fact that $s\bmod 2^{r_p} - c_i
+\geq 0$ gives
 \begin{align}
-  \frac{s'}{s}
-    &=    \frac{m_i\cdot(s \div 2^{r_p}) + s\bmod 2^{r_p} - c_i.}{s}\\
-    &\geq \frac{m_i\cdot(s \div 2^{r_p})}{s}\\
-    &\geq \frac{m_i\cdot\left(\frac{s}{2^{r_p}} - 1\right)}{s}\\
-    &\geq \frac{m_i}{2^{r_p}} - \frac{1}{s}\\
-    &\geq p_i - \frac{1}{2^{r_s - r_t}}
+  \log s' \geq \log (p_i\cdot (s\div 2^{r_p})).
 \end{align}
-since $s\bmod 2^{r_p} > c_i$ by the definition of $i$, and using the fact that
-$s\div 2^{r_p} = \frac{s - s\bmod 2^{r_p}}{2^{r_p}}$ by the definition of
-$\div$ and $s\geq 2^{r_s - r_t}$. By choosing $r_s - r_t$ to be reasonably
-large (it is equal to 32 in our implementation), we ensure that $\frac{s'}{s}$
-is very close to $p_i$. This behaviour can be seen visually in
+then by the definition of $\div$, we have $s\div 2^{r_p} > \frac{s}{2^{r_p}} -
+1$, and thus
+\begin{align}
+  \log s'
+    &\geq \log\left(p_i\left(\frac{s}{2^{r_p}} -1\right)\right)\\
+    &\geq \log s - h(x) + \log\left(1 - \frac{2^{r_p}}{s}\right)
+\end{align}
+using the fact that $P(x) = \frac{p_i}{2^{r_p}}$. Finally, using $s \geq 2^{r_s
+- r_t}$,
+\begin{equation}
+  \log s' \geq \log s - h(x) + \log (1 - \epsilon)
+\end{equation}
+as required.
+
+By choosing $r_s - r_t$ to be reasonably
+large (it is equal to 32 in our implementation), we ensure that
+$\frac{s'}{s}$ is very close to $P(x)$. This behaviour can be seen visually in
 \cref{fig:visual-ans}, which shows the improvement in the approximation for
 larger $s$.
 
 \subsection*{Pseudocode for $d$}
 We now have everything we need to write down a procedure to compute $d$. We
-assume access to a function $f_P:\bar{s}\mapsto a_i, c_i, m_i$, where $i$ is
+assume access to a function $f_P:\bar{s}\mapsto a_i, c_i, p_i$, where $i$ is
 defined above. This function clearly depends on the distribution $P$, and its
 computational complexity is equivalent to that of computing the CDF and inverse
 CDF of $P$. For many common distributions, the CDF and inverse CDF have
-straightforward closed form expressions.
+straightforward closed form expressions, which don't require an explicit sum
+over $i$.
 
 We compute $d$ as follows:
 \begin{lstlisting}
 def $d$($s$):
     $\bar s$ = $s\bmod 2^{r_p}$
-    $x$, $c_x$, $m_x$ = $f_P(\bar s)$
-    $s'$ = $m_x \cdot (s \div 2^{r_p}) + \bar s - c_x$
+    $x$, $c$, $p$ = $f_P(\bar s)$
+    $s'$ = $p \cdot (s \div 2^{r_p}) + \bar s - c$
     return $s'$, $x$
 \end{lstlisting}
 
 \subsection*{Inverting the decoder}
 Having described a decoding process which appears not to throw away any
-information, we now derive the inverse process and show that it is
-computationally straightforward. On a high level, the inverse of the function
-$D$ can be expressed as
+information, we now derive the inverse process, \push, and show that it is
+computationally straightforward.
+
+The \push\ function has access to the symbol $x$ as one of its inputs, and must
+do two things. Firstly it must \texttt{stack\_push} the correct number of
+elements to $t$ from the lower bits of $s$. Then it must reverse the effect of
+$d$ on $s$, returning a value of $s$ identical to that before \pop\ was
+applied.
+
+Thus, on a high level, the inverse of the function \pop\ can be expressed as
 \begin{lstlisting}
-def $C$(($s$, $t$), $x$):
-    $m$, $c$ = $g_P$($x$)
-    $s$, $t$ = renorm_inverse($s$, $t$, $m$)
-    $s$, $x$ = $d$($s$)
-    return ($s$, $t$), $x$
+def push(($s$, $t$), $x$):
+    $p$, $c$ = $g_P$($x$)
+    $s'$, $t$ = renorm_inverse($s$, $t$; $p$)
+    $s$ = $d^{-1}$($s'$; $p$, $c$)
+    return $s$, $t$
 \end{lstlisting}
+where $g_P:x\mapsto p_i, c_i$ with $i$ as above, is similar to $f_P$ in that it
+is analagous to computing the quantized CDF and mass function $P$. The function
+$d^{-1}$ is really a pseudo-inverse of $d$; it is the inverse of $s\mapsto
+d(s, x)$, holding $x$ fixed.
+
+As mentioned above, \texttt{renorm\_inverse} must \texttt{stack\_push} the
+correct amount of data from the lower order bits of $s$ into $t$. A necessary
+condition which the output of \texttt{renorm} must satisfy is $2^{r_s - r_t}
+\leq d^{-1}(s'; p, c) < 2^{r_s}$.
+
+The definition of $s'$ is straightforward to invert, yielding a formula for
+$d^{-1}$:
+\begin{equation}
+  d^{-1}(s'; p, c) = 2^{r_p} \cdot (s' \div p) + s' \bmod p + c
+\end{equation}
+
+A na\"ive implementation of \texttt{renorm\_inverse} would be
+\begin{lstlisting}
+def renorm_inverse($s$, $t$):
+    while $d^{-1}$($s$; $p$, $c$) $\geq 2^{r_s}$:
+        $t$ = stack_push($t$, $s\bmod 2^{r_t}$)
+        $s$ = $s\div 2^{r_t}$
+    return $s$, $t$
+\end{lstlisting}
+While $d^{-1}(s', x) < 2^{r_s}$ is certainly a \emph{necessary} condition for
+the correctness of \texttt{renorm\_inverse}, it isn't immediately clear whether
+it is sufficient. In particular, it is possible that the first $s'$ for which
+$d^{-1}(s', p, c) < 2^{r_s}$ is not the correct one. We can verify that $s'$ is
+correct by ensuring that $d^{-1}(s'\div2^{r_t}) < 2^{r_s - r_t}$, which would
+imply that $s'$ is the only possible value.
+% TODO: make this much clearer
+
+
 \printbibliography
 \end{document}
