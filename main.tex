@@ -31,11 +31,6 @@
 \addbibresource{ans-notes.bib}
 \renewcommand*{\intitlepunct}{\space}
 
-% TODO: Maybe delete this stuff:
-\usepackage{siunitx}
-\DeclareSIUnit[parse-numbers=false]\bit{bits}
-\newcommand\bits{\,\si\bit}
-
 \usepackage{listings}
 \lstset{language=Python, mathescape=true, columns=flexible, xleftmargin=0.9cm,
         basicstyle=\ttfamily, commentstyle=\textrm}
@@ -48,12 +43,25 @@
 
 \author{
   James Townsend\\
-  University College London
+  University College London\\
+  \texttt{james.townsend@cs.ucl.ac.uk}
 }
 \title{A tutorial on the range variant of asymmetric numeral systems}
 
 \begin{document}
 \maketitle
+\begin{abstract}
+This paper is intended to be an accessible introduction to the range variant of
+Asymmetric Numeral Systems (rANS). This version of ANS can be used as a drop in
+replacement for traditional arithmetic coding (AC). Implementing rANS is more
+straightforward than AC, and this paper includes pseudo-code which could be
+converted without too much effort into a working implementation. An example
+implementation, based on this tutorial, is available at
+\url{https://raw.githubusercontent.com/j-towns/ans-notes/master/rans.py}. After
+reading (and understanding) this tutorial, the reader should understand how
+rANS works, and be able to implement it and prove that it attains a near
+optimal compression rate.
+\end{abstract}
 \section{Introduction}
 We are interested in algorithms for lossless compression of sequences of data.
 The range variant of asymmetric numeral systems (ANS) is such an algorithm,
@@ -230,7 +238,7 @@ It now remains for us to describe the function $d$ and show that it satisfies
 \cref{eq:inner-decoder}, as well as showing how to invert \pop\ to form an
 encoder.
 
-\subsection{The function $d$}\label{sec:inner-decoder}
+\subsection{The function $d$}
 The function $d:\mathbb{N}\rightarrow\mathbb{N}\times\mathcal{A}$ must be a
 bijection, and we aim for $d$ to satisfy \cref{eq:inner-decoder}, and thus
 $P(x)\approx \frac{s'}{s}$.  Achieving this is actually fairly straightforward.
@@ -276,7 +284,7 @@ as the (quantized) cumulative probability of symbol $a_{j-1}$,
 \Cref{fig:interval} illustrates this mapping, with a particular probability
 distribution, for the range $s = 64,\ldots, 71$.
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \centering
   \drawinterval
   \caption{
@@ -288,7 +296,7 @@ distribution, for the range $s = 64,\ldots, 71$.
   \label{fig:interval}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \centering
   \drawpmf \quad \drawapprox{20}{\small} \quad \drawapprox{70}{\tiny}
   \caption{
@@ -426,5 +434,27 @@ of at least $2^{r_t}$, and thus as we iterate the loop above we will land in
 the interval specified by \cref{eq:simple-cond} at most once. This guarantees
 that the $s$ that we recover from \texttt{renorm\_inverse} is the correct one.
 
+\section{Further reading}
+Since its invention by \cite{dudaAsymmetricNumeralSystems2009}, ANS has not
+gained widespread attention in academic literature, despite being used in
+various state of the art compression systems. At the time of writing, a search
+on Google Scholar for the string ``asymmetric numeral systems" yields 148
+results. For comparison, a search for ``arithmetic coding", yields `about
+44,000' results. As far as I'm aware, ANS has not yet made it into any
+textbooks.
+
+However, for those wanting to learn more there is a huge amount of material on
+different variants of ANS in \cite{dudaAsymmetricNumeralSystems2009} and
+\cite{dudaUseAsymmetricNumeral2015a}. A parallelized implementation based on
+SIMD instructions can be found in \cite{giesenInterleavedEntropyCoders2014} and
+a version which encrypts the message whilst compressing in
+\cite{dudaLightweightCompressionEncryption2016}. An extension of ANS to models
+with latent variables was developed by
+\cite{townsendPracticalLosslessCompression2019}.
+
+Duda maintains a list of ANS implementations at
+\url{
+  https://encode.su/
+  threads/2078-List-of-Asymmetric-Numeral-Systems-implementations}.
 \printbibliography
 \end{document}
