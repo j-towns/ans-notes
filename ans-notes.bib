@@ -1,71 +1,57 @@
 
-@online{dudaAsymmetricNumeralSystems2009,
-  archivePrefix = {arXiv},
-  eprinttype = {arxiv},
-  eprint = {0902.0271},
-  primaryClass = {cs, math},
+@online{duda2009,
   title = {Asymmetric Numeral Systems},
-  url = {http://arxiv.org/abs/0902.0271},
-  abstract = {In this paper will be presented new approach to entropy coding: family of generalizations of standard numeral systems which are optimal for encoding sequence of equiprobable symbols, into asymmetric numeral systems - optimal for freely chosen probability distributions of symbols. It has some similarities to Range Coding but instead of encoding symbol in choosing a range, we spread these ranges uniformly over the whole interval. This leads to simpler encoder - instead of using two states to define range, we need only one. This approach is very universal - we can obtain from extremely precise encoding (ABS) to extremely fast with possibility to additionally encrypt the data (ANS). This encryption uses the key to initialize random number generator, which is used to calculate the coding tables. Such preinitialized encryption has additional advantage: is resistant to brute force attack - to check a key we have to make whole initialization. There will be also presented application for new approach to error correction: after an error in each step we have chosen probability to observe that something was wrong. There will be also presented application for new approach to error correction: after an error in each step we have chosen probability to observe that something was wrong. We can get near Shannon's limit for any noise level this way with expected linear time of correction.},
-  urldate = {2019-10-26},
-  date = {2009-05-21},
-  keywords = {Computer Science - Cryptography and Security,Computer Science - Information Theory,Mathematics - General Mathematics},
   author = {Duda, Jarek},
-  file = {/Users/jamietownsend/Zotero/storage/5ZUMIAGF/Duda - 2009 - Asymmetric numeral systems.pdf;/Users/jamietownsend/Zotero/storage/ENSDIVCS/0902.html}
+  date = {2009-05-21},
+  url = {http://arxiv.org/abs/0902.0271},
+  urldate = {2019-10-26},
+  archivePrefix = {arXiv},
+  eprint = {0902.0271},
+  eprinttype = {arxiv},
+  primaryClass = {cs, math}
 }
 
-@inproceedings{townsendPracticalLosslessCompression2019,
-  title = {Practical Lossless Compression with Latent Variables Using Bits Back Coding},
-  url = {https://openreview.net/forum?id=ryE98iR5tm},
-  booktitle = {International Conference on Learning Representations},
-  date = {2019},
-  keywords = {Computer Science - Information Theory,Computer Science - Artificial Intelligence,Computer Science - Machine Learning,Statistics - Computation,Statistics - Machine Learning},
-  author = {Townsend, James and Bird, Thomas and Barber, David},
-  file = {/Users/jamietownsend/Zotero/storage/CDZQW369/Townsend et al. - 2019 - Practical Lossless Compression with Latent Variabl.pdf;/Users/jamietownsend/Zotero/storage/Y683VSVW/1901.html},
-}
-
-@inproceedings{dudaUseAsymmetricNumeral2015a,
+@inproceedings{duda2015,
   title = {The Use of Asymmetric Numeral Systems as an Accurate Replacement for {{Huffman}} Coding},
-  doi = {10.1109/PCS.2015.7170048},
-  abstract = {Entropy coding is an integral part of most data compression systems. Huffman coding (HC) and arithmetic coding (AC) are two of the most widely used coding methods. HC can process a large symbol alphabet at each step allowing for fast encoding and decoding. However, HC typically provides suboptimal data rates due to its inherent approximation of symbol probabilities to powers of 1 over 2. In contrast, AC uses nearly accurate symbol probabilities, hence generally providing better compression ratios. However, AC relies on relatively slow arithmetic operations making the implementation computationally demanding. In this paper we discuss asymmetric numeral systems (ANS) as a new approach to entropy coding. While maintaining theoretical connections with AC, the proposed ANS-based coding can be implemented with much less computational complexity. While AC operates on a state defined by two numbers specifying a range, an ANS-based coder operates on a state defined by a single natural number such that the x ∈ ℕ state contains ≈ log2(x) bits of information. This property allows to have the entire behavior for a large alphabet summarized in the form of a relatively small table (e.g. a few kilobytes for a 256 size alphabet). The proposed approach can be interpreted as an equivalent to adding fractional bits to a Huffman coder to combine the speed of HC and the accuracy offered by AC. Additionally, ANS can simultaneously encrypt a message encoded this way. Experimental results demonstrate effectiveness of the proposed entropy coder.},
-  eventtitle = {2015 {{Picture Coding Symposium}} ({{PCS}})},
   booktitle = {2015 {{Picture Coding Symposium}} ({{PCS}})},
-  date = {2015-05},
-  pages = {65-69},
-  keywords = {arithmetic codes,arithmetic coding,asymmetric numeral systems,Channel coding,computational complexity,data compression,data compression systems,Decoding,entropy,Entropy,entropy coding,Huffman codes,Huffman coding,Probability distribution,Standards,symbol probabilities},
   author = {Duda, Jarek and Tahboub, Khalid and Gadgil, Neeraj J. and Delp, Edward J.},
-  file = {/Users/jamietownsend/Zotero/storage/GQBVZZVE/Duda et al. - 2015 - The use of asymmetric numeral systems as an accura.pdf;/Users/jamietownsend/Zotero/storage/ZCZLER9W/7170048.html},
-  issn = {null}
+  date = {2015-05},
+  pages = {65--69},
+  issn = {null},
+  doi = {10.1109/PCS.2015.7170048},
+  eventtitle = {2015 {{Picture Coding Symposium}} ({{PCS}})}
 }
 
-@article{dudaLightweightCompressionEncryption2016,
-  archivePrefix = {arXiv},
-  eprinttype = {arxiv},
-  eprint = {1612.04662},
-  primaryClass = {cs, math},
+@online{duda2016,
   title = {Lightweight Compression with Encryption Based on {{Asymmetric Numeral Systems}}},
-  url = {http://arxiv.org/abs/1612.04662},
-  abstract = {Data compression combined with effective encryption is a common requirement of data storage and transmission. Low cost of these operations is often a high priority in order to increase transmission speed and reduce power usage. This requirement is crucial for battery-powered devices with limited resources, such as autonomous remote sensors or implants. Well-known and popular encryption techniques are frequently too expensive. This problem is on the increase as machine-to-machine communication and the Internet of Things are becoming a reality. Therefore, there is growing demand for finding trade-offs between security, cost and performance in lightweight cryptography. This article discusses Asymmetric Numeral Systems -- an innovative approach to entropy coding which can be used for compression with encryption. It provides compression ratio comparable with arithmetic coding at similar speed as Huffman coding, hence, this coding is starting to replace them in new compressors. Additionally, by perturbing its coding tables, the Asymmetric Numeral System makes it possible to simultaneously encrypt the encoded message at nearly no additional cost. The article introduces this approach and analyzes its security level. The basic application is reducing the number of rounds of some cipher used on ANS-compressed data, or completely removing additional encryption layer if reaching a satisfactory protection level.},
-  urldate = {2020-01-24},
-  date = {2016-12-14},
-  keywords = {Computer Science - Cryptography and Security,Computer Science - Information Theory},
   author = {Duda, Jarek and Niemiec, Marcin},
-  file = {/Users/jamietownsend/Zotero/storage/4JHCTI6P/Duda and Niemiec - 2016 - Lightweight compression with encryption based on A.pdf;/Users/jamietownsend/Zotero/storage/NILFFRL3/1612.html}
+  date = {2016-12-14},
+  url = {http://arxiv.org/abs/1612.04662},
+  urldate = {2020-01-24},
+  archivePrefix = {arXiv},
+  eprint = {1612.04662},
+  eprinttype = {arxiv},
+  primaryClass = {cs, math}
 }
 
-@article{giesenInterleavedEntropyCoders2014,
-  archivePrefix = {arXiv},
-  eprinttype = {arxiv},
-  eprint = {1402.3392},
-  primaryClass = {cs, math},
+@online{giesen2014,
   title = {Interleaved Entropy Coders},
-  url = {http://arxiv.org/abs/1402.3392},
-  abstract = {The ANS family of arithmetic coders developed by Jarek Duda has the unique property that encoder and decoder are completely symmetric in the sense that a decoder reading bits will be in the exact same state that the encoder was in when writing those bits---all "buffering" of information is explicitly part of the coder state and identical between encoder and decoder. As a consequence, the output from multiple ABS/ANS coders can be interleaved into the same bitstream without any additional metadata. This allows for very efficient encoding and decoding on CPUs supporting superscalar execution or SIMD instructions, as well as GPU implementations. We also show how interleaving without additional metadata can be implemented for any entropy coder, at some increase in encoder complexity.},
-  urldate = {2020-01-24},
-  date = {2014-02-14},
-  keywords = {Computer Science - Information Theory},
   author = {Giesen, Fabian},
-  file = {/Users/jamietownsend/Zotero/storage/7F5Y3TCJ/Giesen - 2014 - Interleaved entropy coders.pdf;/Users/jamietownsend/Zotero/storage/RJYI7L37/1402.html}
+  date = {2014-02-14},
+  url = {http://arxiv.org/abs/1402.3392},
+  urldate = {2020-01-24},
+  archivePrefix = {arXiv},
+  eprint = {1402.3392},
+  eprinttype = {arxiv},
+  primaryClass = {cs, math}
+}
+
+@inproceedings{townsend2019,
+  title = {Practical Lossless Compression with Latent Variables Using Bits Back Coding},
+  booktitle = {International {{Conference}} on {{Learning Representations}}},
+  author = {Townsend, James and Bird, Thomas and Barber, David},
+  date = {2019},
+  url = {https://openreview.net/forum?id=ryE98iR5tm}
 }
 
 
