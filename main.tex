@@ -31,12 +31,12 @@
   uniquelist=false,
   doi=false,
   isbn=false]{biblatex}
-% \setlength\bibitemsep{1.5\itemsep}
-% \DeclareFieldFormat[article, book, inbook, incollection, inproceedings, misc,
-%                     thesis, unpublished, techreport, phdthesis]{title}{#1}
+\setlength\bibitemsep{1.5\itemsep}
+\DeclareFieldFormat[article, book, inbook, incollection, inproceedings, misc,
+                    thesis, unpublished, techreport, phdthesis]{title}{#1}
 \DeclareNameAlias{sortname}{family-given}
 \addbibresource{ans-notes.bib}
-% \renewcommand*{\intitlepunct}{\space}
+\renewcommand*{\intitlepunct}{\space}
 
 \usepackage{listings}
 \lstset{language=Python, mathescape=true, columns=flexible, xleftmargin=0.9cm,
