@@ -1,7 +1,7 @@
 """
 Pure Python implementation of rANS, by Jamie Townsend, to accompany the
-tutorial paper on rANS. The same variable names are used in this file as are
-used in the tutorial.
+tutorial paper on rANS at https://arxiv.org/abs/2001.09186. The same variable
+names are used in this file as are used in the tutorial.
 
 We use the names `push` and `pop` for encoding and decoding respectively. The
 compressed state is a pair `m = (s, t)`, where `s` is an int in the range
