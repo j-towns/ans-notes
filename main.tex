@@ -1,48 +1,17 @@
 \pdfoutput=1
 \documentclass{article}
+\usepackage{j}
 
-\usepackage{color}
-\usepackage{xcolor}
+\input{figs}
 
-\newcommand{\setbackgroundcolour}{\pagecolor[rgb]{0,0.168,0.211}}
-\newcommand{\settextcolour}{\color[rgb]{0.512,0.578,0.586}}
-\newcommand{\darkmode}{\setbackgroundcolour\settextcolour}
-% \darkmode
+\darkmode
 
-\usepackage{hyperref}
-
-\include{figs}
-
-\usepackage{booktabs}
-
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{mathtools}
-\newcommand\given{\,\vert\,}
-\DeclarePairedDelimiter\abs{\lvert}{\rvert}
-
-\usepackage[
-  url=false,
-  style=authoryear,
-  date=year,
-  natbib=true,
-  maxcitenames=2,
-  maxbibnames=10,
-  uniquelist=false,
-  doi=false,
-  isbn=false]{biblatex}
-\setlength\bibitemsep{1.5\itemsep}
-\DeclareFieldFormat[article, book, inbook, incollection, inproceedings, misc,
-                    thesis, unpublished, techreport, phdthesis]{title}{#1}
-\DeclareNameAlias{sortname}{family-given}
 \addbibresource{ans-notes.bib}
-\renewcommand*{\intitlepunct}{\space}
 
 \usepackage{listings}
 \lstset{language=Python, mathescape=true, columns=flexible, xleftmargin=0.9cm,
         basicstyle=\ttfamily, commentstyle=\textrm}
 
-\usepackage{cleveref}
 \newtheorem{problem}{Problem}
 
 \newcommand{\push}{\texttt{push}}
@@ -73,7 +42,7 @@ optimal compression rate.
 We are interested in algorithms for lossless compression of sequences of data.
 The range variant of asymmetric numeral systems (ANS) is such an algorithm,
 and, like arithmetic coding (AC), it is close to optimal in terms of
-compression rate \cite{duda2009}. The key difference
+compression rate \citet{duda2009}. The key difference
 between ANS and AC is that ANS is last-in-first-out (LIFO), or `stack-like',
 while AC is first-in-first-out (FIFO), or `queue-like'.
 
@@ -442,7 +411,7 @@ the interval specified by \cref{eq:simple-cond} at most once. This guarantees
 that the $s$ that we recover from \texttt{renorm\_inverse} is the correct one.
 
 \section{Further reading}
-Since its invention by \cite{duda2009}, ANS appears not to have gained
+Since its invention by \citet{duda2009}, ANS appears not to have gained
 widespread attention in academic literature, despite being used in various
 state of the art compression systems. At the time of writing, a search on
 Google Scholar for the string ``asymmetric numeral systems" yields 148 results.
@@ -450,11 +419,11 @@ For comparison, a search for ``arithmetic coding", yields `about 44,000'
 results. As far as I'm aware, ANS has not yet made it into any textbooks.
 
 However, for those wanting to learn more there is a huge amount of material on
-different variants of ANS in \cite{duda2009} and \cite{duda2015}. A
+different variants of ANS in \citet{duda2009} and \citet{duda2015}. A
 parallelized implementation based on SIMD instructions can be found in
-\cite{giesen2014} and a version which encrypts the message whilst compressing
-in \cite{duda2016}.  An extension of ANS to models with latent variables was
-developed by \cite{townsend2019}.
+\citet{giesen2014} and a version which encrypts the message whilst compressing
+in \citet{duda2016}.  An extension of ANS to models with latent variables was
+developed by \citet{townsend2019}.
 
 Duda maintains a list of ANS implementations at
 \url{
