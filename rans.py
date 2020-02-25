@@ -59,7 +59,7 @@ t_prec = 32
 t_mask = (1 << t_prec) - 1
 s_min  = 1 << s_prec - t_prec
 
-#        head , tail
+#        s    , t
 m_init = s_min, ()
 
 def rans(model):

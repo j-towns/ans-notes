@@ -9,9 +9,13 @@
   \draw [->] (-.2, 0) -> (4 * \barwidth + .2cm, 0) node[anchor=west] {$x$};
   \draw [->] (-.2, 0) -> (-.2, 5.2) node[anchor=south] {$#1$};
   \foreach \x in {0, ..., 4}
-    \draw (\x * \barwidth, -1pt) -- (\x * \barwidth, 1pt);
-  \foreach \x/\char in {0.5/$a$, 1.5/$b$, 2.5/$c$, 3.5/$d$}
-    \draw (\x * \barwidth, 0) node[anchor=north, text height=8] {\char};
+    \draw (\x * \barwidth, -1pt) -- (\x * \barwidth, 0pt);
+    \foreach \x/\char in {0.5/a, 1.5/b, 2.5/c, 3.5/d}
+    \draw (\x * \barwidth, 0) node[anchor=north, text height=8] {\texttt\char};
+}
+
+\newcommand{\ytick}[2]{% height, label
+  \draw (-.2cm - 1pt, #1) node[anchor=east] {#2} -- (-.2cm + 1pt, #1);
 }
 
 \newcommand{\drawbar}[3]{
@@ -22,14 +26,11 @@
 \newcommand{\drawpmf}{
 \begin{tikzpicture}
   \drawaxes{P(x)}
-  \foreach \y in {0.125, 0.25, 0.375}{
-    \draw (-.2cm - 1pt, 12.5 * \y) node[anchor=east] {$\y$}
-      --  (-.2cm + 1pt, 12.5 * \y);
-  }
+  \foreach \y in {0.125, 0.25, 0.375}{\ytick{12.5 * \y}{$\y$}}
   \drawbar{0\barwidth}{0.125}{}
-  \drawbar{1\barwidth}{0.25 }{}
+  \drawbar{1\barwidth}{0.25}{}
   \drawbar{2\barwidth}{0.375}{}
-  \drawbar{3\barwidth}{0.25 }{}
+  \drawbar{3\barwidth}{0.25}{}
 \end{tikzpicture}
 }
 
@@ -43,10 +44,9 @@
     (0, 0) grid (4 * \barwidth, 5.2);
     \drawaxes{s'}
   \foreach \y [parse=true, count=\s] in {\yunit, 2 * \yunit, ..., 5.2}{
-    \node (tick) at (-.2cm, \y) {};
-    \draw ($(tick) - (1pt, 0)$) -- ($(tick) + (1pt, 0)$);
-    \draw ($(tick) - (0, \yunit / 2) - (.05, 0)$) node[anchor=east]
-      {\pgfmathparse{int(\s - 1)} #2 $\pgfmathresult$};
+    \ytick{\y}{}
+    \draw (-.2cm, \y - \yunit / 2) node[anchor=east]
+      {\pgfmathparse{int(\s - 1)}#2$\pgfmathresult$};
   }
   \foreach \x/\freq/\start in {0/1/0, 1/2/1, 2/3/3, 3/2/6}{
     \foreach \y [parse=true, count=\s] in {\yunit, 2 * \yunit, ..., 5.2}{
@@ -54,9 +54,9 @@
         \snew = int(8 * int((\s - 1) / \freq) + mod((\s - 1), \freq) + \start);
         if \snew>#1 then {\toprint = \snew;} else {let \toprint = ;};
         }
-      \draw ($6.25/\splus*(0, -1) + 0.45*(\barwidth,0)
+      \draw ($6.25/\splus*(0, -1) + 0.5*(\barwidth,0)
       + \s*(0, 12.5 / \splus) + \x*(\barwidth, 0)$)
-      node [text=lightgray] {#2 $\toprint$};
+      node [text=lightgray] {#2$\toprint$};
     }
   }
   \drawbar{0\barwidth}{0.125}{thin, gray}
@@ -69,8 +69,8 @@
         \snew = int(8 * int((\s - 1) / \freq) + mod((\s - 1), \freq) + \start);
         if \snew<=#1 then {\toprint = \snew;} else {let \toprint = ;};
         }
-      \draw ($(0, -\yunit / 2) + 0.47*(\barwidth,0)
-      + \s*(0, \yunit) + \x*(\barwidth, 0)$) node {#2 $\mathbf\toprint$};
+      \draw ($(0, -\yunit / 2) + 0.5*(\barwidth,0)
+      + \s*(0, \yunit) + \x*(\barwidth, 0)$) node {#2$\mathbf\toprint$};
     }
   }
 \end{tikzpicture}
@@ -129,13 +129,13 @@
   \draw (0.75  \intervalwidth, -2\gap - 1.5\lineheight)
     -- (0.75 * \intervalwidth, -2\gap - 2.5\lineheight);
   \draw (0.06125\intervalwidth, -2\gap - 2\lineheight)
-    node [text height=1ex] {$a$};
+    node [text height=1ex] {\texttt{a}};
   \draw (0.25   \intervalwidth, -2\gap - 2\lineheight)
-    node [text height=1ex] {$b$};
+    node [text height=1ex] {\texttt{b}};
   \draw (0.5625 \intervalwidth, -2\gap - 2\lineheight)
-    node [text height=1ex] {$c$};
+    node [text height=1ex] {\texttt{c}};
   \draw (0.875  \intervalwidth, -2\gap - 2\lineheight)
-    node [text height=1ex] {$d$};
+    node [text height=1ex] {\texttt{d}};
 
 \end{tikzpicture}
 }
