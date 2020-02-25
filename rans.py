@@ -113,7 +113,7 @@ if __name__ == "__main__":
           'c': 3,
           'd': 6}
 
-    # Probability masses
+    # Probability weights, must sum to 2 ** p_prec
     ps = {'a': 1,
           'b': 2,
           'c': 3,

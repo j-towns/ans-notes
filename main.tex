@@ -69,7 +69,7 @@ symbols \(x\) are drawn. We denote the probability mass function of the model
 \(P\). Later we will need to assume that all probability masses are quantized
 to some precision \(r_p\), i.e.\ that there exist integers \(p_1, \ldots, p_I\)
 such that
-\(P(a_i) = \frac{p_i}{2^{r_p}}\) for each \(i = 1,\ldots,I\).
+\(P(a_i) = {p_i}/{2^{r_p}}\) for each \(i = 1,\ldots,I\).
 
 \section{Building an encoder/decoder pair}
 The problem which the ANS encoder solves is
@@ -92,10 +92,11 @@ statement:
   \(h(x_1, \ldots, x_N)\).
 \end{problem}
 
-Our description of the details of ANS focuses on the decoding algorithm,
-because this leads to a more straightforward presentation. We describe the
-decoder and show that it solves \Cref{prob:alt}, then we show how to invert it
-to form an encoder.
+An algorithm which solves \Cref{prob:alt} has an inverse which solves
+\Cref{prob:default}, and vice versa. Our description of the details of ANS
+focuses on the decoding algorithm, because this leads to a more straightforward
+presentation. We describe the decoder and show that it solves \Cref{prob:alt},
+then we show how to invert it to form an encoder.
 
 The decoding algorithm we describe will be formed from a series of ANS \pop\
 operations, its inverse will be formed from ANS \push\ operations.
@@ -120,8 +121,8 @@ N\rightarrow\mathbb N\times\mathcal{A}\), which takes an integer \(s\) as input
 and returns a pair \((s', x)\), where \(s'\) is an integer and \(x\) is a
 symbol.  Thus \pop\ begins
 \begin{lstlisting}
-def pop(\(s\), \(t\)):
-    \(s'\), \(x= d(s)\)
+def pop($s$, $t$):
+    $s'$, $x= d(s)$
 \end{lstlisting}
 We design the function \(d\) so that if \(s\geq 2^{r_s - r_t}\), then
 \begin{equation}\label{eq:inner-decoder}
@@ -137,10 +138,10 @@ and move its contents into the lower order bits of \(s'\), increasing the size
 of \(s'\). We refer to this as `renormalization'. Having done this, we return
 the new message and the symbol \(x\). The full definition of \pop\ is thus
 \begin{lstlisting}
-def pop(\(s\), \(t\)):
-    \(s'\), \(x= d(s)\)
-    \(s\), \(t =\) renorm(\(s'\), \(t\))
-    return (\(s\), \(t\)), \(x\)
+def pop($s$, $t$):
+    $s'$, $x= d(s)$
+    $s$, $t =$ renorm($s'$, $t$)
+    return ($s$, $t$), $x$
 \end{lstlisting}
 
 Renormalization is necessary to ensure that the \(s\) returned by \pop\
@@ -151,15 +152,15 @@ into the lower order bits of \(s\) until \(s\) is full to capacity. To be
 precise:
 
 \begin{lstlisting}
-def renorm(\(s\), \(t\)):
-    # While \(s\) has space for another element from \(t\)
-    while \(s < 2^{r_s - r_t}\):
-        # Pop an element \(t_\mathrm{top}\) from \(t\)
-        \(t\), \(t_{\mathrm{top}}\) = stack_pop(\(t\))
+def renorm($s$, $t$):
+    # While $s$ has space for another element from $t$
+    while $s < 2^{r_s - r_t}$:
+        # Pop an element $t_\mathrm{top}$ from $t$
+        $t$, $t_{\mathrm{top}}$ = stack_pop($t$)
 
-        # and push \(t_\mathrm{top}\) into the lower bits of \(s\)
-        \(s\) = \(2^{r_t} \cdot s\) + \(t_{\mathrm{top}}\)
-    return \(s\), \(t\)
+        # and push $t_\mathrm{top}$ into the lower bits of $s$
+        $s$ = $2^{r_t} \cdot s$ + $t_{\mathrm{top}}$
+    return $s$, $t$
 \end{lstlisting}
 
 The condition \(s < 2^{r_s - r_t}\) guarantees that \(2^{r_t} \cdot s +
@@ -290,10 +291,11 @@ distribution, for the range \(s = 64,\ldots, 71\).
 \end{figure}
 
 \subsection{Computing \(s'\)}
-The number \(s'\) was defined above as `the index of \(s\) within the (ordered)
-set \(\tilde d^{-1}(x)\), with indices starting at \(0\)'. We now derive an
-expression for \(s'\) in terms of \(s\), \(p_i\) and \(c_i\), where \(i =
-\max\{j: c_j \leq \bar s\}\) (as above), and we prove \cref{eq:inner-decoder}.
+The number \(s'\) was defined above as ``the index of \(s\) within the
+(ordered) set \(\tilde d^{-1}(x)\), with indices starting at \(0\)''. We now
+derive an expression for \(s'\) in terms of \(s\), \(p_i\) and \(c_i\), where
+\(i = \max\{j: c_j \leq \bar s\}\) (as above), and we prove
+\cref{eq:inner-decoder}.
 
 Our expression for \(s'\) is a sum of two terms. The first term counts the
 entire intervals, corresponding to \(a_i\), which are below \(s\). This is
@@ -342,11 +344,11 @@ sum over \(i\).
 
 We compute \(d\) as follows:
 \begin{lstlisting}
-def \(d\)(\(s\)):
-    \(\bar s\) = \(s\bmod 2^{r_p}\)
-    \(x\), \(c\), \(p\) = \(f_P(\bar s)\)
-    \(s'\) = \(p \cdot (s \div 2^{r_p}) + \bar s - c\)
-    return \(s'\), \(x\)
+def $d$($s$):
+    $\bar s$ = $s\bmod 2^{r_p}$
+    $x$, $c$, $p$ = $f_P(\bar s)$
+    $s'$ = $p \cdot (s \div 2^{r_p}) + \bar s - c$
+    return $s'$, $x$
 \end{lstlisting}
 
 \subsection{Inverting the decoder}
@@ -362,11 +364,11 @@ was applied.
 
 Thus, on a high level, the inverse of the function \pop\ can be expressed as
 \begin{lstlisting}
-def push((\(s\), \(t\)), \(x\)):
-    \(p\), \(c\) = \(g_P\)(\(x\))
-    \(s'\), \(t\) = renorm_inverse(\(s\), \(t\); \(p\))
-    \(s\) = \(d^{-1}\)(\(s'\); \(p\), \(c\))
-    return \(s\), \(t\)
+def push(($s$, $t$), $x$):
+    $p$, $c$ = $g_P$($x$)
+    $s'$, $t$ = renorm_inverse($s$, $t$; $p$)
+    $s$ = $d^{-1}$($s'$; $p$, $c$)
+    return $s$, $t$
 \end{lstlisting}
 where \(g_P:x\mapsto p_i, c_i\) with \(i\) as above, similarly to \(f_P\) in
 that it is analagous to computing the quantized CDF and mass function \(P\).
@@ -401,11 +403,11 @@ order bits of \(s'\) into \(t\) (decreasing \(s'\)) until \cref{eq:simple-cond}
 is satisfied. To be specific:
 
 \begin{lstlisting}
-def renorm_inverse(\(s'\), \(t\)):
-    while \(s' \geq p \cdot 2^{r_s - r_p}\):
-        \(t\) = stack_push(\(t\), \(s'\bmod 2^{r_t}\))
-        \(s'\) = \(s'\div 2^{r_t}\)
-    return \(s'\), \(t\)
+def renorm_inverse($s'$, $t$):
+    while $s' \geq p \cdot 2^{r_s - r_p}$:
+        $t$ = stack_push($t$, $s'\bmod 2^{r_t}$)
+        $s'$ = $s'\div 2^{r_t}$
+    return $s'$, $t$
 \end{lstlisting}
 
 However, as mentioned above, although \cref{eq:simple-cond} is a
