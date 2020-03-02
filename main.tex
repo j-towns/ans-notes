@@ -13,6 +13,8 @@
         basicstyle=\ttfamily, commentstyle=\textrm}
 
 \newtheorem{problem}{Problem}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
 
 \newcommand{\push}{\texttt{push}}
 \newcommand{\pop}{\texttt{pop}}
@@ -40,46 +42,67 @@ optimal compression rate.
 \end{abstract}
 \section{Introduction}
 We are interested in algorithms for lossless compression of sequences of data.
-The range variant of asymmetric numeral systems (ANS) is such an algorithm,
-and, like arithmetic coding (AC), it is close to optimal in terms of
-compression rate \citet{duda2009}. The key difference between ANS and AC is
-that ANS is last-in-first-out (LIFO), or `stack-like', while AC is
-first-in-first-out (FIFO), or `queue-like'.
+Arithmetic coding (AC) and the range variant of asymmetric numeral systems
+(ANS) are examples of such algorithms. Just like arithmetic coding, ANS is
+close to optimal in terms of compression rate \citep{witten1987, duda2009}. The
+key difference between ANS and AC is in the order in which data are decoded: in
+in ANS, compression is last-in-first-out (LIFO), or `stack-like', while in AC
+it is first-in-first-out (FIFO), or `queue-like'. We recommend
+\cite[Chapter~4-6]{mackay2003} for background on source coding and arithmetic
+coding in particular. In this paper we will focus solely on ANS, which as far
+as we are aware is not covered by any existing textbooks.
 
-ANS comprises two functions, which we denote \push\ and \pop, for encoding and
-decoding, respectively (the names refer to the analagous stack operations). The
-\push\ function accepts some pre-compressed information \(m\) (short for
-`message'), and a symbol \(x\) to be compressed, and returns a piece of
-compressed information, \(m'\). Thus it has the signiature
+ANS comprises two basic functions, which we denote \push\ and \pop, for
+encoding and decoding, respectively (the names refer to the analogous stack
+operations). The \push\ function accepts some pre-compressed information \(m\)
+(short for `message'), and a symbol \(x\) to be compressed, and returns a new
+compressed message, \(m'\). Thus it has the signature
 \begin{equation}
   \push:(m, x) \mapsto m'.
 \end{equation}
-The new compressed state, \(m'\), contains precisely the same information as
-the pair \((m, x)\), and therefore \push\ can be inverted, giving a decoder
+The new compressed message, \(m'\), contains precisely the same information as
+the pair \((m, x)\), and therefore \push\ can be inverted to form a decoder
 mapping.  The decoder, \pop, maps from \(m'\) back to \(m, x\):
 \begin{equation}
   \pop:m' \mapsto (m, x).
 \end{equation}
-The functions \push\ and \pop\ are inverse to one another, so
+Because the functions \push\ and \pop\ are inverse to one another, we have
 \(\push(\pop(m))=m\) and \(\pop(\push(m, x)) = (m, x)\).
 
-Encoding and decoding both require knowledge of some model over symbols. We use
-\(\mathcal{A} = \{a_1, \ldots, a_I\}\) to denote the alphabet from which
-symbols \(x\) are drawn. We denote the probability mass function of the model
-\(P\). Later we will need to assume that all probability masses are quantized
-to some precision \(r_p\), i.e.\ that there exist integers \(p_1, \ldots, p_I\)
-such that
-\(P(a_i) = {p_i}/{2^{r_p}}\) for each \(i = 1,\ldots,I\).
+\subsection{Specifying the problem}
+The functions \push\ and \pop\ which we define will both require access to the
+probability distribution from which symbols are drawn (or an approximation
+thereof). We use a formal notation similar to \citet{mackay2003} to describe
+distributions:
+\begin{definition}
+  An \emph{ensemble} \(X\) with precision \(r\) is a triple \((x,
+  \mathcal{A}_X, \mathcal{P}_X)\) where the \emph{outcome} \(x\) is the value
+  of a random variable, taking on one of a set of possible values
+  \(\mathcal{A}_X = \{a_1, \ldots, a_I\}\), and \(\mathcal{P}_X = \{p_1,
+  \ldots, p_I\}\) are the \emph{integer-valued} probability weights with each
+  \(p_i\in\{1, \ldots, 2^r\}\), each \(P(x=a_i) = p_i / 2^r\) and therefore
+  \(\sum_{i=1}^Ip_i = 2^r\).
+\end{definition}
+%TODO: discuss quantization
+We can measure the information content of an outcome using the following:
+\begin{definition}
+  The \emph{Shannon information content} of an outcome \(x\) is
+  \begin{equation}
+    h(x) := \log 1 / P(x)
+  \end{equation}
+\end{definition}
 
-\section{Building an encoder/decoder pair}
-The problem which the ANS encoder solves is
+The problem that our encoder must solve is
 
 \begin{problem}\label{prob:default}
   Given a sequence of random variables \(X_1, \ldots, X_N\), find an invertible
-  algorithm which will map any sample \(x_1, \ldots, x_N\) to a binary message
-  \(b\), such that the length of \(b\) is close to the information content
+  algorithm which will map any sample \(x_1, \ldots, x_N\) to a unique binary
+  message of length \(b\), such that \(b\) is close to the information content
   \(h(x_1, \ldots, x_N)\).
 \end{problem}
+where \(h(x) := \log 1 / P(x)\) denotes the information content of a
+sample \(x\) (see \cite[Chapter~4]{mackay2003} for more detail on the
+information content and its meaning).
 
 Given that the algorithm is invertible, we can reformulate \Cref{prob:default}
 in terms of the inverse. This leads to a different, but equivalent, problem
@@ -265,7 +288,7 @@ as the (quantized) cumulative probability of symbol \(a_{j-1}\),
 \Cref{fig:interval} illustrates this mapping, with a particular probability
 distribution, for the range \(s = 64,\ldots, 71\).
 
-\begin{figure}[ht]
+\begin{figure}[h]
   \centering
   \drawinterval
   \caption{
@@ -278,7 +301,7 @@ distribution, for the range \(s = 64,\ldots, 71\).
   \label{fig:interval}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[h]
   \centering
   \drawpmf \quad \drawapprox{20}{\small} \quad \drawapprox{70}{\tiny}
   \caption{
