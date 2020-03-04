@@ -4,7 +4,7 @@
 
 \input{figs}
 
-\darkmode
+% \darkmode
 
 \addbibresource{ans-notes.bib}
 
@@ -185,7 +185,7 @@
   which we refer to as the `effective length' of \(m\). Note that the
   constraint \cref{eq:s-constraint} and the fact that \(s < 2^{r_s}\) imply
   that
-  \begin{equation}
+  \begin{equation}\label{eq:effective-length}
     l(m) - r_t \leq l^*(m) < l(m).
   \end{equation}
   Intuitively \(l^*\) can be thought of as a precise measure of the size of
@@ -295,19 +295,30 @@ def renorm($s$, $t$):
     l^*(m_0) - l^*(m_N)
       &= \sum_{n=1}^N [l^*(m_{n-1}) - l^*(m_n)]\\
       &\leq \sum_{n=1}^N [h(x_n \given x_1, \ldots, x_{n-1}) + \epsilon]\\
-      &\leq h(x_1, \ldots, x_N) + N\epsilon
+      &\leq h(x_1, \ldots, x_N) + N\epsilon\label{eq:effective-lengths}
   \end{align}
 
-  Thus rANS solves \cref{prob:alt}: the number of bits observed from \(t\) is
-  `close' to \(h(x_1,\ldots,x_N)\) in the sense that the difference is no more
-  than an additive constant, \(r_t\), plus a term which grows linearly with
-  \(N\), but with a very small coefficient \(\epsilon\). In our implementation
-  we use \(r_p = 16\) or less, and thus \(\epsilon \leq \frac{2^{16 + 32 -
-  64}}{\ln 2} \approx 2.2\times 10^{-5}\).
+  This result tells us about the reduction in message length from \pop\, but
+  also, conversely, about the length of a message \emph{constructed} using
+  \push. We can actually initialize an encoding procedure by \emph{choosing}
+  \(m_N\), and then performing a sequence of \push\ operations. Since our
+  ultimate goal when encoding is to minimize the encoded message length \(m_0\)
+  we choose the setting of \(m_N\) which minimizes \(l^*(m_N)\), which is \(m_N
+  = (s_N, t_N)\) where \(s_N = 2^{r_s - r_t}\) and \(t_N\) is an empty stack.
+  That gives \(l^*(m_N) = r_s - r_t\) and therefore, by
+  \cref{eq:effective-lengths},
+  \begin{equation}
+    l^*(m_0) \leq h(x_1, \ldots, x_N) + N\epsilon + r_s - r_t.
+  \end{equation}
+  Combining that with \cref{eq:effective-length} gives an expression for the
+  actual length of the flattened binary message resulting from \(m_0\):
+  \begin{equation}
+    l(m_0) \leq h(x_1, \ldots, x_N) + N\epsilon + r_s.
+  \end{equation}
 
   It now remains for us to describe the function \(d\) and show that it
   satisfies \cref{eq:inner-decoder}, as well as showing how to invert \pop\ to
-  form an encoder.
+  form the encoding function \push.
 
 
 \subsection{The function \(d\)}
