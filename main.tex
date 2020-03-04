@@ -4,7 +4,7 @@
 
 \input{figs}
 
-% \darkmode
+\darkmode
 
 \addbibresource{ans-notes.bib}
 
@@ -29,152 +29,225 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-This paper is intended to be an accessible introduction to the range variant of
-Asymmetric Numeral Systems (rANS). This version of ANS can be used as a drop in
-replacement for traditional arithmetic coding (AC). Implementing rANS is more
-straightforward than AC, and this paper includes pseudo-code which could be
-converted without too much effort into a working implementation. An example
-implementation, based on this tutorial, is available at
-\url{https://raw.githubusercontent.com/j-towns/ans-notes/master/rans.py}. After
-reading (and understanding) this tutorial, the reader should understand how
-rANS works, and be able to implement it and prove that it attains a near
-optimal compression rate.
+  This paper is intended to be an accessible introduction to the range variant
+  of asymmetric numeral systems (ANS). This version of ANS can be used as a
+  drop in replacement for traditional arithmetic coding (AC). Implementing ANS
+  is more straightforward than AC, and this paper includes pseudo-code which
+  could be converted without too much effort into a working implementation. An
+  example implementation, based on this tutorial, is available at
+  \url{https://raw.githubusercontent.com/j-towns/ans-notes/master/rans.py}.
+  After reading (and understanding) this tutorial, the reader should understand
+  how ANS works, and be able to implement it and prove that it attains a near
+  optimal compression rate.
 \end{abstract}
-\section{Introduction}
-We are interested in algorithms for lossless compression of sequences of data.
-Arithmetic coding (AC) and the range variant of asymmetric numeral systems
-(ANS) are examples of such algorithms. Just like arithmetic coding, ANS is
-close to optimal in terms of compression rate \citep{witten1987, duda2009}. The
-key difference between ANS and AC is in the order in which data are decoded: in
-in ANS, compression is last-in-first-out (LIFO), or `stack-like', while in AC
-it is first-in-first-out (FIFO), or `queue-like'. We recommend
-\cite[Chapter~4-6]{mackay2003} for background on source coding and arithmetic
-coding in particular. In this paper we will focus solely on ANS, which as far
-as we are aware is not covered by any existing textbooks.
 
-ANS comprises two basic functions, which we denote \push\ and \pop, for
-encoding and decoding, respectively (the names refer to the analogous stack
-operations). The \push\ function accepts some pre-compressed information \(m\)
-(short for `message'), and a symbol \(x\) to be compressed, and returns a new
-compressed message, \(m'\). Thus it has the signature
-\begin{equation}
-  \push:(m, x) \mapsto m'.
-\end{equation}
-The new compressed message, \(m'\), contains precisely the same information as
-the pair \((m, x)\), and therefore \push\ can be inverted to form a decoder
-mapping.  The decoder, \pop, maps from \(m'\) back to \(m, x\):
-\begin{equation}
-  \pop:m' \mapsto (m, x).
-\end{equation}
-Because the functions \push\ and \pop\ are inverse to one another, we have
-\(\push(\pop(m))=m\) and \(\pop(\push(m, x)) = (m, x)\).
 
-\subsection{Specifying the problem}
-The functions \push\ and \pop\ which we define will both require access to the
-probability distribution from which symbols are drawn (or an approximation
-thereof). We use a formal notation similar to \citet{mackay2003} to describe
-distributions:
-\begin{definition}
-  An \emph{ensemble} \(X\) with precision \(r\) is a triple \((x,
-  \mathcal{A}_X, \mathcal{P}_X)\) where the \emph{outcome} \(x\) is the value
-  of a random variable, taking on one of a set of possible values
-  \(\mathcal{A}_X = \{a_1, \ldots, a_I\}\), and \(\mathcal{P}_X = \{p_1,
-  \ldots, p_I\}\) are the \emph{integer-valued} probability weights with each
-  \(p_i\in\{1, \ldots, 2^r\}\), each \(P(x=a_i) = p_i / 2^r\) and therefore
-  \(\sum_{i=1}^Ip_i = 2^r\).
-\end{definition}
-%TODO: discuss quantization
-We can measure the information content of an outcome using the following:
-\begin{definition}
-  The \emph{Shannon information content} of an outcome \(x\) is
+\section{Introduction}\label{sec:intro}
+  We are interested in algorithms for lossless compression of sequences of
+  data.  Arithmetic coding (AC) and the range variant of asymmetric numeral
+  systems (sometimes abbreviated to rANS, we simply use ANS) are examples of
+  such algorithms. Just like arithmetic coding, ANS is close to optimal in
+  terms of compression rate \citep{witten1987, duda2009}. The key difference
+  between ANS and AC is in the order in which data are decoded: in ANS,
+  compression is last-in-first-out (LIFO), or `stack-like', while in AC it is
+  first-in-first-out (FIFO), or `queue-like'. We recommend
+  \cite[Chapter~4-6]{mackay2003} for background on source coding and arithmetic
+  coding in particular. In this paper we will focus solely on ANS, which as far
+  as we are aware is not covered by any existing textbooks.
+
+  ANS comprises two basic functions, which we denote \push\ and \pop, for
+  encoding and decoding, respectively (the names refer to the analogous stack
+  operations). The \push\ function accepts some pre-compressed information
+  \(m\) (short for `message'), and a symbol \(x\) to be compressed, and returns
+  a new compressed message, \(m'\). Thus it has the signature
   \begin{equation}
-    h(x) := \log 1 / P(x)
+    \push:(m, x) \mapsto m'.
   \end{equation}
-\end{definition}
+  The new compressed message, \(m'\), contains precisely the same information
+  as the pair \((m, x)\), and therefore \push\ can be inverted to form a
+  decoder mapping.  The decoder, \pop, maps from \(m'\) back to \(m, x\):
+  \begin{equation}
+    \pop:m' \mapsto (m, x).
+  \end{equation}
+  Because the functions \push\ and \pop\ are inverse to one another, we have
+  \(\push(\pop(m))=m\) and \(\pop(\push(m, x)) = (m, x)\).
 
-The problem that our encoder must solve is
 
-\begin{problem}\label{prob:default}
-  Given a sequence of random variables \(X_1, \ldots, X_N\), find an invertible
-  algorithm which will map any sample \(x_1, \ldots, x_N\) to a unique binary
-  message of length \(b\), such that \(b\) is close to the information content
-  \(h(x_1, \ldots, x_N)\).
-\end{problem}
-where \(h(x) := \log 1 / P(x)\) denotes the information content of a
-sample \(x\) (see \cite[Chapter~4]{mackay2003} for more detail on the
-information content and its meaning).
+\subsection{Specifying the problem which ANS solves}\label{sec:prob-spec}
+  In this section we first define some notation, and then describe the problem
+  which ANS solves in more detail, as well as the high level approach to
+  solving it. In the following we will use \(\log\) as shorthand for the base 2
+  logarithm, usually denoted \(\log_2\).
 
-Given that the algorithm is invertible, we can reformulate \Cref{prob:default}
-in terms of the inverse. This leads to a different, but equivalent, problem
-statement:
+  The functions \push\ and \pop\ will both require access to the probability
+  distribution from which symbols are drawn (or an approximation thereof). To
+  describe distributions we use notation similar to \citet{mackay2003}:
+  \begin{definition}\label{def:ensemble}
+    An \emph{ensemble} \(X\) with precision \(r\) is a triple \((x,
+    \mathcal{A}_X, \mathcal{P}_X)\) where the \emph{outcome} \(x\) is the value
+    of a random variable, taking on one of a set of possible values
+    \(\mathcal{A}_X = \{a_1, \ldots, a_I\}\), and \(\mathcal{P}_X = \{p_1,
+    \ldots, p_I\}\) are the \emph{integer-valued} probability weights with each
+    \(p_i\in\{1, \ldots, 2^r\}\), each \(P(x=a_i) = p_i / 2^r\) and therefore
+    \(\sum_{i=1}^Ip_i = 2^r\).
+  \end{definition}
+  Note that this definition differs from the definition in \citet{mackay2003}
+  in that the probabilities are assumed to be \emph{quantized}  to some
+  precision \(r\) (i.e.\ representable by fractions \(p_i/2^r\)), and we assume
+  that none of the \(a_i\) have zero probability. Having probabilities in this
+  form is necessary for the arithmetic operations involved in ANS (as well as
+  AC). Note that if we use a high enough \(r\) then we can specify
+  probabilities with a precision similar to that of typical floating point ---
+  32-bit floating points for example contain 23 `fraction' bits, and thus would
+  have roughly the same precision as our representation with \(r=23\).
 
-\begin{problem}\label{prob:alt}
-  Given a sequence of random variables \(X_1, \ldots, X_N\), find an invertible
-  algorithm which maps a source of bits to a sequence \(x_1, \ldots, x_N\),
-  such that the number of bits observed is close to the information content
-  \(h(x_1, \ldots, x_N)\).
-\end{problem}
+  The `information content' of an outcome can be measured using the following:
+  \begin{definition}
+    The \emph{Shannon information content} of an outcome \(x\) is
+    \begin{equation}
+      h(x) := \log 1 / P(x)
+    \end{equation}
+  \end{definition}
+  Given a sequence of ensembles \(X_1, \ldots, X_N\), we seek an algorithm
+  which can encode any outcome \(x_1, \ldots, x_N\) in a binary message whose
+  length is close to \(h(x_1, \ldots, x_N) = \log 1/P(x_1, \ldots, x_N)\).
+  According to Shannon's source coding theorem it is not possible to losslessly
+  encode data in a message with expected length less than \(\mathbb{E}[h(x)]\),
+  thus we are looking for an encoding which is close to optimal in expectation
+  \citep{shannon1948}. Note that the joint information content of the sequence
+  can be decomposed:
+  \begin{align}
+    \label{eq:info-decomp1}
+    h(x_1, \ldots, x_N)
+      &= \log\frac{1}{P(x_1, \ldots, x_N)}\\
+      \label{eq:info-decomp2}
+      &= \sum_n \log\frac{1}{P(x_n \given x_1, \ldots, x_{n-1})}\\
+      \label{eq:info-decomp3}
+      &= \sum_n h(x_n \given x_1, \ldots, x_{n-1}).
+  \end{align}
 
-An algorithm which solves \Cref{prob:alt} has an inverse which solves
-\Cref{prob:default}, and vice versa. Our description of the details of ANS
-focuses on the decoding algorithm, because this leads to a more straightforward
-presentation. We describe the decoder and show that it solves \Cref{prob:alt},
-then we show how to invert it to form an encoder.
+  Because it simplifies the presentation significantly, we focus first on the
+  ANS \emph{decoder}, that is the reverse mapping which maps from a compressed
+  binary message to the sequence \(x_1, \ldots, x_N\). This will be formed of a
+  sequence of \(N\) \pop\ operations; starting with a message \(m_0\) we define
+  \begin{align}
+    m_n, x_n = \pop(m_{n-1})\qquad\text{for }n=1, \ldots, N.
+  \end{align}
+  where each \pop\ uses the conditional distribution \(X_n\given X_1, \ldots,
+  X_{n-1}\). We will show that the message resulting from each \pop, \(m_n\) is
+  effectively shorter than \(m_{n-1}\) by no more than \(h(x_n \given x_1,
+  \ldots, x_{n-1}) + \epsilon\) bits, where \(\epsilon\) is a small constant
+  which we specify below, and therefore the difference in length between
+  \(m_0\) and \(m_N\) is no more than \(h(x_1, \ldots, x_N) + N\epsilon\), by
+  \cref{eq:info-decomp1,eq:info-decomp2,eq:info-decomp3}.
 
-The decoding algorithm we describe will be formed from a series of ANS \pop\
-operations, its inverse will be formed from ANS \push\ operations.
+  We will also show that \pop\ is a bijection whose inverse, \push, is
+  straightforward to compute, and therefore an encoding procedure can easily be
+  defined by starting with a very short base message and adding data
+  sequentially using \push. Our guarantee about the effect of \pop\ on message
+  length translates directly to a guarantee about the effect of \push, in that
+  the increase in message length due to the sequence of \push\ operations is
+  less than \(h(x_1, \ldots, x_N) + N\epsilon\).
+
+
+\section{Asymmetric numeral systems}
+  Having set out the problem which ANS solves and given a high level overview
+  of the solution in \Cref{sec:intro}, we now go into more detail, firstly
+  discussing the data structure we use for \(m\), then the \pop\ function and
+  finally the computation of its inverse, \push.
+
 
 \subsection{The structure of the message}\label{sec:message}
-We use a pair \(m = (s, t)\) as the data structure for \(m\). The element \(t\)
-is a stack of unsigned integers of some fixed precision \(r_t\). This stack has
-its own push and pop operations, which we denote \(\texttt{stack\_push}\) and
-\(\texttt{stack\_pop}\) respectively. The element \(s\) is an unsigned integer
-with precision \(r_s\) where \(r_s > r_t\). We need \(s\) to be large to ensure
-our decoding is accurate, and so we also impose the constraint \(s\geq2^{r_s -
-r_t}\), more detail on how and why we do this is given below. In our
-implementation we use \(r_t = 32\) and \(r_s = 64\). The stack \(t\), along
-with its pop operation, can model the `source of bits' from our problem
-statement above.
-% TODO: Diagram of \(m\)
+  We use a pair \(m = (s, t)\) as the data structure for the message \(m\). The
+  element \(t\) is a stack of unsigned integers of some fixed precision
+  \(r_t\).  This stack has its own push and pop operations, which we denote
+  \(\texttt{stack\_push}\) and \(\texttt{stack\_pop}\) respectively. The
+  element \(s\) is an unsigned integer with precision \(r_s\) where \(r_s >
+  r_t\). We need \(s\) to be large to ensure that our decoding is accurate, and
+  so we also impose the constraint
+  \begin{equation}\label{eq:s-constraint}
+    s\geq2^{r_s - r_t},
+  \end{equation}
+  more detail on how and why we do this is given below. In our implementation
+  we use \(r_t = 32\) and \(r_s = 64\).
+  % TODO: Diagram of \(m\)
+
+  Note that a message can be flattened into a string of bits by concatenating
+  \(s\) and the elements of \(t\). The length of this string is
+  \begin{equation}
+    l(m) := r_s + r_t\cdot\abs{t}
+  \end{equation}
+  where \(\abs{t}\) is the number of elements in the stack \(t\). We refer to
+  this quantity as the `length' of \(m\). We also define the useful quantity
+  \begin{equation}
+    l^*(m) := \log s + r_t\abs{t}
+  \end{equation}
+  which we refer to as the `effective length' of \(m\). Note that the
+  constraint \cref{eq:s-constraint} and the fact that \(s < 2^{r_s}\) imply
+  that
+  \begin{equation}
+    l(m) - r_t \leq l^*(m) < l(m).
+  \end{equation}
+  Intuitively \(l^*\) can be thought of as a precise measure of the size of
+  \(m\), whereas \(l\), which is integer valued, is a more crude measure.
+  Clearly \(l\) is ultimately the measure that we care most about, since it
+  tells us the size of a binary encoding of \(m\), and we use \(l^*\) to prove
+  bounds on \(l\).
+
 
 \subsection{Constructing the pop operation}
-Our strategy for performing a decode with \pop\ will be to firstly to extract a
-symbol from \(s\). We do this using a bijective function \(d:\mathbb
-N\rightarrow\mathbb N\times\mathcal{A}\), which takes an integer \(s\) as input
-and returns a pair \((s', x)\), where \(s'\) is an integer and \(x\) is a
-symbol.  Thus \pop\ begins
-\begin{lstlisting}
-def pop($s$, $t$):
+  To avoid notational clutter, we begin by describing the \pop\ operation for a
+  single ensemble \(X = (x, \mathcal{A}_X, \mathcal{P}_X)\) with precision
+  \(r\), before applying \pop\ to a sequence in \Cref{seq:pop-seq}. Our
+  strategy for performing a decode with \pop\ will be to firstly to extract a
+  symbol from \(s\). We do this using a bijective function \(d:\mathbb
+  N\rightarrow\mathbb N\times\mathcal{A}\), which takes an integer \(s\) as
+  input and returns a pair \((s', x)\), where \(s'\) is an integer and \(x\) is
+  a symbol.  Thus \pop\ begins
+  \begin{lstlisting}
+def pop($m$):
+    $s$, $t = m$
     $s'$, $x= d(s)$
-\end{lstlisting}
-We design the function \(d\) so that if \(s\geq 2^{r_s - r_t}\), then
-\begin{equation}\label{eq:inner-decoder}
-  \log s'\geq\log s - h(x) + \log (1 - \epsilon)
-\end{equation}
-where \(\epsilon := 2^{r_p + r_t - r_s}\). We give details of \(d\) and prove
-\cref{eq:inner-decoder} below. Note that for small \(\epsilon\) we have \(\log
-(1 - \epsilon) \approx -\frac{\epsilon}{\ln2}\), and thus this term is small.
+  \end{lstlisting}
+  We design the function \(d\) so that if \(s\geq 2^{r_s - r_t}\), then
+  \begin{equation}\label{eq:inner-decoder}
+    \log s - \log s' \leq h(x) + \epsilon
+  \end{equation}
+  where
+  \begin{equation}
+    \epsilon := \log \frac{1}{1 - 2^{-(r_s - r_t - r)}}.
+  \end{equation}
+  We give details of \(d\) and prove \cref{eq:inner-decoder} below. Note that
+  when the term \(2^{-(r_s - r_t - r)}\) is small, the following approximation
+  is accurate:
+  \begin{equation}
+    \epsilon \approx \frac{2^{-(r_s - r_t - r)}}{\ln 2}
+  \end{equation}
+  and thus $\epsilon$ itself is small. In our implementation we typically use
+  \(r = 16\), which gives \(\epsilon = \log 1/(1 - 2^{-16}) \approx 2.2 \times
+  10^{-5}\).
 
-After extracting a symbol using \(d\), we check whether \(s'\) is below
-\(2^{r_s - r_t}\), and if it is we \texttt{stack\_pop} an integer from \(t\)
-and move its contents into the lower order bits of \(s'\), increasing the size
-of \(s'\). We refer to this as `renormalization'. Having done this, we return
-the new message and the symbol \(x\). The full definition of \pop\ is thus
-\begin{lstlisting}
-def pop($s$, $t$):
+  After extracting a symbol using \(d\), we check whether \(s'\) is below
+  \(2^{r_s - r_t}\), and if it is we \texttt{stack\_pop} an integer from \(t\)
+  and move its contents into the lower order bits of \(s'\), increasing the
+  size of \(s'\). We refer to this as `renormalization'. Having done this, we
+  return the new message and the symbol \(x\). The full definition of \pop\ is
+  thus
+  \begin{lstlisting}
+def pop($m$):
+    $s$, $t = m$
     $s'$, $x= d(s)$
     $s$, $t =$ renorm($s'$, $t$)
     return ($s$, $t$), $x$
-\end{lstlisting}
+  \end{lstlisting}
 
-Renormalization is necessary to ensure that the \(s\) returned by \pop\
-satisfies \(s\geq2^{r_s - r_t}\) and is therefore is large enough that
-\cref{eq:inner-decoder} holds at the start of any future \pop\ operation. The
-\texttt{renorm} function has a while loop, which pushes elements from \(t\)
-into the lower order bits of \(s\) until \(s\) is full to capacity. To be
-precise:
-
-\begin{lstlisting}
+  Renormalization is necessary to ensure that the \(s\) returned by \pop\
+  satisfies \(s\geq2^{r_s - r_t}\) and is therefore large enough that
+  \cref{eq:inner-decoder} holds at the start of any future \pop\ operation. The
+  \texttt{renorm} function has a while loop, which pushes elements from \(t\)
+  into the lower order bits of \(s\) until \(s\) is full to capacity. To be
+  precise:
+  \begin{lstlisting}
 def renorm($s$, $t$):
     # While $s$ has space for another element from $t$
     while $s < 2^{r_s - r_t}$:
@@ -184,62 +257,58 @@ def renorm($s$, $t$):
         # and push $t_\mathrm{top}$ into the lower bits of $s$
         $s$ = $2^{r_t} \cdot s$ + $t_{\mathrm{top}}$
     return $s$, $t$
-\end{lstlisting}
+  \end{lstlisting}
 
-The condition \(s < 2^{r_s - r_t}\) guarantees that \(2^{r_t} \cdot s +
-t_{\text{top}} < 2^{r_s}\), and thus there can be no loss of information
-resulting from overflow. We also have
-\begin{equation}
-  \log (2^{r_t} \cdot s + t_\text{top}) \geq r_t + \log s.
-\end{equation}
-Applying this inequality repeatedly, once for each iteration of the while loop
-in \texttt{renorm}, we have
-\begin{equation}\label{eq:renorm}
-\log s \geq \log s' + r_t\cdot\left[\text{\# elements popped from \(t\)}\right]
-\end{equation}
-where \(s, t = \texttt{renorm}(s', t)\) as in the definition of \pop.
+  The condition \(s < 2^{r_s - r_t}\) guarantees that \(2^{r_t} \cdot s +
+  t_{\text{top}} < 2^{r_s}\), and thus there can be no loss of information
+  resulting from overflow. We also have
+  \begin{equation}
+    \log (2^{r_t} \cdot s + t_\text{top}) \geq r_t + \log s.
+  \end{equation}
+  Applying this inequality repeatedly, once for each iteration of the while
+  loop in \texttt{renorm}, we have
+  \begin{equation}\label{eq:renorm}
+    \log s \geq \log s' + r_t\cdot\left[\text{\# elements popped from
+    \(t\)}\right]
+  \end{equation}
+  where \(s, t = \texttt{renorm}(s', t)\) as in the definition of \pop.
 
-\subsection{Popping in sequence}
-We now directly tackle the setup described in \Cref{prob:alt}, performing a
-sequence of \pop\ operations to decode a sequence of data. We suppose that we
-are given some initial `message' \(m_0= (s_0, t_0)\), where \(2^{r_s - r_t}
-\leq s_0 < 2^{r_s}\) and \(t_0\) is a stack of infinite depth, modelling the
-`source of bits' from the problem statement.
+  Combining \cref{eq:inner-decoder} and \cref{eq:renorm} gives us
+  \begin{equation}\label{eq:pop-inequality}
+    l^*(m) - l^*(m') \leq h(x) + \epsilon
+  \end{equation}
+  where \((m', x) = \pop(m)\), using the definition of \(l^*\), i.e.\ the
+  reduction in the effective message length resulting from \pop\ is close to
+  \(h(x)\).
 
-For \(n=1\ldots N\), we let \((s_n, t_n), x_n = \pop(s_{n-1}, t_{n-1})\), where
-each \pop\ operation uses the corresponding distribution \(P(x_n\given
-x_1,\ldots,x_{n-1})\).
 
-Now, applying \cref{eq:inner-decoder} and \cref{eq:renorm} to the
-\(n^\mathrm{th}\) \pop\ gives
-\begin{equation}\label{eq:recursion}
-  \log s_{n+1} \geq \log s_n - h(x_n\given x_1,\ldots,x_{n-1}) + b_n + \log (1
-  - \epsilon)
-\end{equation}
+\subsection{Popping in sequence}\label{seq:pop-seq}
+  We now apply \pop\ to the setup described in \Cref{sec:prob-spec}, performing
+  a sequence of \pop\ operations to decode a sequence of data. We suppose that
+  we are given some initial message \(m_0\).
 
-where \(b_n\) is the number of bits popped/observed from the stack \(t\) in the
-\(n^{\mathrm{th}}\) \pop\ step. Applying \cref{eq:recursion} recursively, for
-\(n=1,\ldots, N\), yields
-\begin{equation}
-  \log s_N \geq \log s_0 - h(x_1, \ldots, x_N) + \sum_{n=1}^{N} b_n +
-  N\log(1-\epsilon)
-\end{equation}
-which can be rearranged to give
-\begin{equation}
-  \sum_{n=1}^Nb_n \leq h(x_1, \ldots, x_N) - N\log(1-\epsilon) + r_t
-  \approx h(x_1, \ldots, x_N) + N\epsilon + r_t
-\end{equation}
-since \(\log(1 - \epsilon)\approx\epsilon\) for small \(\epsilon\) and \(\log
-s_N - \log s_0 < r_t\). Thus rANS solves \cref{prob:alt}: the number of bits
-observed from \(t\) is `close' to \(h(x_1,\ldots,x_N)\) in the sense that the
-difference is no more than an additive constant, \(r_t\), plus a term which
-grows linearly with \(N\), but with a very small coefficient \(\epsilon\). In
-our implementation we use \(r_p = 16\) or less, and thus \(\epsilon \leq
-\frac{2^{16 + 32 - 64}}{\ln 2} \approx 2.2\times 10^{-5}\).
+  For \(n=1\ldots N\), we let \(m_n, x_n = \pop(m_{n-1})\) as in
+  \Cref{sec:prob-spec}, where each \pop\ uses the corresponding distribution
+  \(X_n \given X_1, \ldots, X_{n-1}\). Applying \cref{eq:pop-inequality} to
+  each of the \(N\) \pop\ operations, we have:
+  \begin{align}
+    l^*(m_0) - l^*(m_N)
+      &= \sum_{n=1}^N [l^*(m_{n-1}) - l^*(m_n)]\\
+      &\leq \sum_{n=1}^N [h(x_n \given x_1, \ldots, x_{n-1}) + \epsilon]\\
+      &\leq h(x_1, \ldots, x_N) + N\epsilon
+  \end{align}
 
-It now remains for us to describe the function \(d\) and show that it satisfies
-\cref{eq:inner-decoder}, as well as showing how to invert \pop\ to form an
-encoder.
+  Thus rANS solves \cref{prob:alt}: the number of bits observed from \(t\) is
+  `close' to \(h(x_1,\ldots,x_N)\) in the sense that the difference is no more
+  than an additive constant, \(r_t\), plus a term which grows linearly with
+  \(N\), but with a very small coefficient \(\epsilon\). In our implementation
+  we use \(r_p = 16\) or less, and thus \(\epsilon \leq \frac{2^{16 + 32 -
+  64}}{\ln 2} \approx 2.2\times 10^{-5}\).
+
+  It now remains for us to describe the function \(d\) and show that it
+  satisfies \cref{eq:inner-decoder}, as well as showing how to invert \pop\ to
+  form an encoder.
+
 
 \subsection{The function \(d\)}
 The function \(d:\mathbb{N}\rightarrow\mathbb{N}\times\mathcal{A}\) must be a
