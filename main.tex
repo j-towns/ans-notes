@@ -10,7 +10,7 @@
 
 \usepackage{listings}
 \lstset{language=Python, mathescape=true, columns=flexible, xleftmargin=0.9cm,
-        basicstyle=\ttfamily, commentstyle=\textrm}
+        xrightmargin=0.9cm, basicstyle=\ttfamily, commentstyle=\textrm}
 
 \newtheorem{problem}{Problem}
 \theoremstyle{definition}
@@ -18,6 +18,9 @@
 
 \newcommand{\push}{\texttt{push}}
 \newcommand{\pop}{\texttt{pop}}
+
+\newcommand{\tom}[1]{({\color{red}{#1 -- Tom}})}
+\newcommand{\jamie}[1]{({\color{blue}{#1 -- Jamie}})}
 
 \author{
   James Townsend\\
@@ -29,16 +32,15 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-  This paper is intended to be an accessible introduction to the range variant
-  of asymmetric numeral systems (ANS). This version of ANS can be used as a
-  drop in replacement for traditional arithmetic coding (AC). Implementing ANS
-  is more straightforward than AC, and this paper includes pseudo-code which
-  could be converted without too much effort into a working implementation. An
-  example implementation, based on this tutorial, is available at
+  This paper is intended to be a brief and accessible introduction to the range
+  variant of asymmetric numeral systems (ANS), a system for lossless
+  compression of sequences which can be used as a drop in replacement for
+  arithmetic coding (AC). Because of the relative simplicity of ANS, we are
+  able to provide enough mathematical detail to rigorously prove that ANS
+  attains a compression rate close to the Shannon limit. Pseudo-code, intuitive
+  interpretation and diagrams are given alongside the mathematical derivations.
+  A working Python demo which accompanies this tutorial is available at
   \url{https://raw.githubusercontent.com/j-towns/ans-notes/master/rans.py}.
-  After reading (and understanding) this tutorial, the reader should understand
-  how ANS works, and be able to implement it and prove that it attains a near
-  optimal compression rate.
 \end{abstract}
 
 
@@ -48,7 +50,7 @@
   systems (sometimes abbreviated to rANS, we simply use ANS) are examples of
   such algorithms. Just like arithmetic coding, ANS is close to optimal in
   terms of compression rate \citep{witten1987, duda2009}. The key difference
-  between ANS and AC is in the order in which data are decoded: in ANS,
+  between ANS and AC is in the order in which data are \emph{decoded}: in ANS,
   compression is last-in-first-out (LIFO), or `stack-like', while in AC it is
   first-in-first-out (FIFO), or `queue-like'. We recommend
   \cite[Chapter~4-6]{mackay2003} for background on source coding and arithmetic
@@ -74,10 +76,10 @@
 
 
 \subsection{Specifying the problem which ANS solves}\label{sec:prob-spec}
-  In this section we first define some notation, and then describe the problem
-  which ANS solves in more detail, as well as the high level approach to
-  solving it. In the following we will use \(\log\) as shorthand for the base 2
-  logarithm, usually denoted \(\log_2\).
+  In this section we first define some notation, then describe the problem
+  which ANS solves in more detail and sketch the high level approach to solving
+  it. In the following we use `\(\log\)' as shorthand for the base 2 logarithm,
+  usually denoted `\(\log_2\)'.
 
   The functions \push\ and \pop\ will both require access to the probability
   distribution from which symbols are drawn (or an approximation thereof). To
@@ -105,7 +107,7 @@
   \begin{definition}
     The \emph{Shannon information content} of an outcome \(x\) is
     \begin{equation}
-      h(x) := \log 1 / P(x)
+      h(x) := \log \frac{1}{P(x)}
     \end{equation}
   \end{definition}
   Given a sequence of ensembles \(X_1, \ldots, X_N\), we seek an algorithm
@@ -134,8 +136,8 @@
     m_n, x_n = \pop(m_{n-1})\qquad\text{for }n=1, \ldots, N.
   \end{align}
   where each \pop\ uses the conditional distribution \(X_n\given X_1, \ldots,
-  X_{n-1}\). We will show that the message resulting from each \pop, \(m_n\) is
-  effectively shorter than \(m_{n-1}\) by no more than \(h(x_n \given x_1,
+  X_{n-1}\). We will show that the message resulting from each \pop, \(m_n\),
+  is effectively shorter than \(m_{n-1}\) by no more than \(h(x_n \given x_1,
   \ldots, x_{n-1}) + \epsilon\) bits, where \(\epsilon\) is a small constant
   which we specify below, and therefore the difference in length between
   \(m_0\) and \(m_N\) is no more than \(h(x_1, \ldots, x_N) + N\epsilon\), by
@@ -159,23 +161,24 @@
 
 \subsection{The structure of the message}\label{sec:message}
   We use a pair \(m = (s, t)\) as the data structure for the message \(m\). The
-  element \(t\) is a stack of unsigned integers of some fixed precision
-  \(r_t\).  This stack has its own push and pop operations, which we denote
-  \(\texttt{stack\_push}\) and \(\texttt{stack\_pop}\) respectively. The
-  element \(s\) is an unsigned integer with precision \(r_s\) where \(r_s >
-  r_t\). We need \(s\) to be large to ensure that our decoding is accurate, and
-  so we also impose the constraint
+  element \(s\) is an unsigned integer with precision \(r_s\) (i.e.\ \(s \in
+  \{0, 1, \ldots, 2^{r_s} - 1\}\), so that \(s\) can be expressed in a binary
+  number with \(r_s\) bits). The element \(t\) is a stack of unsigned
+  integers of some fixed precision \(r_t\) where \(r_t < r_s\).  This stack has
+  its own push and pop operations, which we denote \(\texttt{stack\_push}\) and
+  \(\texttt{stack\_pop}\) respectively. See \cref{fig:message} for a diagram of
+  \(s\) and \(t\).  We need \(s\) to be large enough to ensure that our
+  decoding is accurate, and so we also impose the constraint
   \begin{equation}\label{eq:s-constraint}
     s\geq2^{r_s - r_t},
   \end{equation}
-  more detail on how and why we do this is given below. In our implementation
-  we use \(r_t = 32\) and \(r_s = 64\).
-  % TODO: Diagram of \(m\)
+  more detail on how and why we do this is given below. In the demo
+  implementation we use \(r_s = 64\) and \(r_t = 32\).
 
   Note that a message can be flattened into a string of bits by concatenating
   \(s\) and the elements of \(t\). The length of this string is
   \begin{equation}
-    l(m) := r_s + r_t\cdot\abs{t}
+    l(m) := r_s + r_t\abs{t}
   \end{equation}
   where \(\abs{t}\) is the number of elements in the stack \(t\). We refer to
   this quantity as the `length' of \(m\). We also define the useful quantity
@@ -183,10 +186,10 @@
     l^*(m) := \log s + r_t\abs{t}
   \end{equation}
   which we refer to as the `effective length' of \(m\). Note that the
-  constraint \cref{eq:s-constraint} and the fact that \(s < 2^{r_s}\) imply
+  constraint in \cref{eq:s-constraint} and the fact that \(s < 2^{r_s}\) imply
   that
   \begin{equation}\label{eq:effective-length}
-    l(m) - r_t \leq l^*(m) < l(m).
+    l(m) - r_t \leq l^*(m) < l(m)
   \end{equation}
   Intuitively \(l^*\) can be thought of as a precise measure of the size of
   \(m\), whereas \(l\), which is integer valued, is a more crude measure.
@@ -194,20 +197,31 @@
   tells us the size of a binary encoding of \(m\), and we use \(l^*\) to prove
   bounds on \(l\).
 
+  \begin{figure}[ht]
+    \centering
+    \drawmessage
+    \caption{
+      The two components of a message: the unsigned integer \(s\) (with \(r_s =
+      16\)) and the stack of unsigned integers \(t\) (with \(r_t = 8\)). The
+      integers are represented here in base 2 (binary).
+  }
+    \label{fig:message}
+  \end{figure}
+
 
 \subsection{Constructing the pop operation}
   To avoid notational clutter, we begin by describing the \pop\ operation for a
   single ensemble \(X = (x, \mathcal{A}_X, \mathcal{P}_X)\) with precision
   \(r\), before applying \pop\ to a sequence in \Cref{seq:pop-seq}. Our
-  strategy for performing a decode with \pop\ will be to firstly to extract a
+  strategy for performing a decode with \pop\ will be firstly to extract a
   symbol from \(s\). We do this using a bijective function \(d:\mathbb
   N\rightarrow\mathbb N\times\mathcal{A}\), which takes an integer \(s\) as
   input and returns a pair \((s', x)\), where \(s'\) is an integer and \(x\) is
   a symbol.  Thus \pop\ begins
   \begin{lstlisting}
 def pop($m$):
-    $s$, $t = m$
-    $s'$, $x= d(s)$
+    $s$, $t$ := $m$
+    $s'$, $x$ := $d(s)$
   \end{lstlisting}
   We design the function \(d\) so that if \(s\geq 2^{r_s - r_t}\), then
   \begin{equation}\label{eq:inner-decoder}
@@ -223,39 +237,38 @@ def pop($m$):
   \begin{equation}
     \epsilon \approx \frac{2^{-(r_s - r_t - r)}}{\ln 2}
   \end{equation}
-  and thus $\epsilon$ itself is small. In our implementation we typically use
-  \(r = 16\), which gives \(\epsilon = \log 1/(1 - 2^{-16}) \approx 2.2 \times
-  10^{-5}\).
+  and thus $\epsilon$ itself is small. We typically use \(r_s = 64\), \(r_t =
+  32\), and \(r = 16\), which gives \(\epsilon = \log 1/(1 - 2^{-16}) \approx
+  2.2 \times 10^{-5}\).
 
   After extracting a symbol using \(d\), we check whether \(s'\) is below
-  \(2^{r_s - r_t}\), and if it is we \texttt{stack\_pop} an integer from \(t\)
-  and move its contents into the lower order bits of \(s'\), increasing the
-  size of \(s'\). We refer to this as `renormalization'. Having done this, we
-  return the new message and the symbol \(x\). The full definition of \pop\ is
-  thus
-  \begin{lstlisting}
+  \(2^{r_s - r_t}\), and if it is we \texttt{stack\_pop} integers from \(t\)
+  and move their contents into the lower order bits of \(s'\). We refer to this
+  as `renormalization'.  Having done this, we return the new message and the
+  symbol \(x\). The full definition of \pop\ is thus
+  \begin{lstlisting}[frame=single]
 def pop($m$):
-    $s$, $t = m$
-    $s'$, $x= d(s)$
-    $s$, $t =$ renorm($s'$, $t$)
+    $s$, $t$ := $m$
+    $s'$, $x$ := $d$($s$)
+    $s$, $t$ := renorm($s'$, $t$) $\quad\leftarrow\textrm{ this function is defined below}$
     return ($s$, $t$), $x$
   \end{lstlisting}
 
-  Renormalization is necessary to ensure that the \(s\) returned by \pop\
-  satisfies \(s\geq2^{r_s - r_t}\) and is therefore large enough that
+  Renormalization is necessary to ensure that the value of \(s\) returned by
+  \pop\ satisfies \(s\geq2^{r_s - r_t}\) and is therefore large enough that
   \cref{eq:inner-decoder} holds at the start of any future \pop\ operation. The
   \texttt{renorm} function has a while loop, which pushes elements from \(t\)
   into the lower order bits of \(s\) until \(s\) is full to capacity. To be
   precise:
-  \begin{lstlisting}
+  \begin{lstlisting}[frame=single]
 def renorm($s$, $t$):
-    # While $s$ has space for another element from $t$
+    # while $s$ has space for another element from $t$
     while $s < 2^{r_s - r_t}$:
-        # Pop an element $t_\mathrm{top}$ from $t$
-        $t$, $t_{\mathrm{top}}$ = stack_pop($t$)
+        # pop an element $t_\mathrm{top}$ from $t$
+        $t$, $t_{\mathrm{top}}$ := stack_pop($t$)
 
         # and push $t_\mathrm{top}$ into the lower bits of $s$
-        $s$ = $2^{r_t} \cdot s$ + $t_{\mathrm{top}}$
+        $s$ := $2^{r_t} \cdot s$ + $t_{\mathrm{top}}$
     return $s$, $t$
   \end{lstlisting}
 
@@ -263,10 +276,10 @@ def renorm($s$, $t$):
   t_{\text{top}} < 2^{r_s}\), and thus there can be no loss of information
   resulting from overflow. We also have
   \begin{equation}
-    \log (2^{r_t} \cdot s + t_\text{top}) \geq r_t + \log s.
+    \log (2^{r_t} \cdot s + t_\text{top}) \geq r_t + \log s
   \end{equation}
-  Applying this inequality repeatedly, once for each iteration of the while
-  loop in \texttt{renorm}, we have
+  since \(t_{\text{top}} \geq 0\).  Applying this inequality repeatedly, once
+  for each iteration of the while loop in \texttt{renorm}, we have
   \begin{equation}\label{eq:renorm}
     \log s \geq \log s' + r_t\cdot\left[\text{\# elements popped from
     \(t\)}\right]
@@ -277,7 +290,7 @@ def renorm($s$, $t$):
   \begin{equation}\label{eq:pop-inequality}
     l^*(m) - l^*(m') \leq h(x) + \epsilon
   \end{equation}
-  where \((m', x) = \pop(m)\), using the definition of \(l^*\), i.e.\ the
+  where \((m', x) = \pop(m)\), using the definition of \(l^*\). That is, the
   reduction in the effective message length resulting from \pop\ is close to
   \(h(x)\).
 
@@ -295,7 +308,7 @@ def renorm($s$, $t$):
     l^*(m_0) - l^*(m_N)
       &= \sum_{n=1}^N [l^*(m_{n-1}) - l^*(m_n)]\\
       &\leq \sum_{n=1}^N [h(x_n \given x_1, \ldots, x_{n-1}) + \epsilon]\\
-      &\leq h(x_1, \ldots, x_N) + N\epsilon\label{eq:effective-lengths}
+      &\leq h(x_1, \ldots, x_N) + N.\epsilon\label{eq:effective-lengths}
   \end{align}
 
   This result tells us about the reduction in message length from \pop\, but
@@ -352,9 +365,9 @@ expressed as a composition \(\tilde d = \tilde d_2 \circ \tilde d_1\), where
 \(\tilde d_1\) does the partitioning described above, and \(\tilde d_2\)
 assigns numbers within each partition to symbols (sub-intervals). So
 \begin{equation}
-  \tilde d_1(s) := s \bmod 2^{r_p}.
+  \tilde d_1(s) := s \bmod 2^{r}.
 \end{equation}
-Using the shorthand \(\bar{s} := \tilde d_1 (a)\), and defining
+Using the shorthand \(\bar{s} := \tilde d_1 (s)\), and defining
 \begin{equation}
   c_j := \begin{cases}
     0                    &\quad\text{if }j=1\\
@@ -365,30 +378,31 @@ as the (quantized) cumulative probability of symbol \(a_{j-1}\),
 \begin{equation}
   \tilde d_2(\bar s) := a_i\text{ where }i := \max \{j : c_j \leq \bar s\}.
 \end{equation}
-\Cref{fig:interval} illustrates this mapping, with a particular probability
-distribution, for the range \(s = 64,\ldots, 71\).
+That is, \(\tilde d_2(\bar s)\) selects the symbol whose sub-interval contains
+\(\bar s\).  \Cref{fig:interval} illustrates this mapping, with a particular
+probability distribution, for the range \(s = 64,\ldots, 71\).
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \centering
   \drawinterval
   \caption{
-    Showing the correspondence between \(s\), \(s \bmod 2^{r_p}\) and the
+    Showing the correspondence between \(s\), \(s \bmod 2^{r}\) and the
     symbol \(x\). The interval \([0, 1]\subset\mathbb{R}\) is modelled by the
-    set of integers \(\{0, 1, \ldots, 2^{r_p} - 1\}\). In this case \(r_p = 3\)
+    set of integers \(\{0, 1, \ldots, 2^{r} - 1\}\). In this case \(r = 3\)
     and the probabilities of each symbol are \(P(\mathtt a) =
     \nicefrac{1}{8}\), \(P(\mathtt b) = \nicefrac{2}{8}\), \(P(\mathtt c) =
     \nicefrac{3}{8}\) and \(P(\mathtt d) = \nicefrac{2}{8}\).}
   \label{fig:interval}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \centering
   \drawpmf \quad \drawapprox{20}{\small} \quad \drawapprox{70}{\tiny}
   \caption{
     Showing the pmf of a distribution over symbols (left) and a visualization
     of the mapping \(d\) (middle and right).  Numbers less than or equal to
     \(s\) are shown in bold, for \(s=20\) and \(s=70\) (middle and right,
-    respecitively), and the ratio in \cref{eq:ratio} can be seen to approach
+    respectively), and the ratio in \cref{eq:ratio} can be seen to approach
     the histogram in the left hand plot.
   }\label{fig:visual-ans}
 \end{figure}
@@ -401,34 +415,32 @@ derive an expression for \(s'\) in terms of \(s\), \(p_i\) and \(c_i\), where
 \cref{eq:inner-decoder}.
 
 Our expression for \(s'\) is a sum of two terms. The first term counts the
-entire intervals, corresponding to \(a_i\), which are below \(s\). This is
-equal to \(p_i \cdot (s \div 2^{r_p})\), where \(\div\) denotes \emph{integer}
-division, discarding any remainder. The second term counts our position within
-the current inverval, which is \(\bar s - c_i \equiv s\bmod 2^{r_p} - c_i\).
-Thus
+entire intervals, corresponding to the selected symbol \(a_i\), which are below
+\(s\). The size of each interval is \(p_i\) and the number of intervals is
+\(s\div 2^{r}\), thus the first term is \(p_i \cdot (s \div 2^{r})\), where
+\(\div\) denotes \emph{integer} division, discarding any remainder.  The second
+term counts our position within the current interval, which is \(\bar s - c_i
+\equiv s\bmod 2^{r} - c_i\). Thus
 \begin{equation}\label{eq:s' def}
-  s' = p_i \cdot (s \div 2^{r_p}) + s\bmod 2^{r_p} - c_i.
+  s' = p_i \cdot (s \div 2^{r}) + s\bmod 2^{r} - c_i.
 \end{equation}
 This expression is straightforward to compute. Moreover from this expression it
 is straightforward to prove \cref{eq:inner-decoder}. Firstly, taking the
 \(\log\) of both sides of \cref{eq:s' def} and using the fact that \(s\bmod
-2^{r_p} - c_i \geq 0\) gives
+2^{r} - c_i \geq 0\) gives
 \begin{align}
-  \log s' \geq \log (p_i\cdot (s\div 2^{r_p})).
+  \log s' \geq \log (p_i\cdot (s\div 2^{r})).
 \end{align}
-then by the definition of \(\div\), we have \(s\div 2^{r_p} > \frac{s}{2^{r_p}}
+then by the definition of \(\div\), we have \(s\div 2^{r} > \frac{s}{2^{r}}
 - 1\), and thus
 \begin{align}
   \log s'
-    &\geq \log\left(p_i\left(\frac{s}{2^{r_p}} -1\right)\right)\\
-    &\geq \log s - h(x) + \log\left(1 - \frac{2^{r_p}}{s}\right)
+    &\geq \log\left(p_i\left(\frac{s}{2^{r}} -1\right)\right)\\
+    &\geq \log s - h(x) + \log\left(1 - \frac{2^{r}}{s}\right)\\
+    &\geq \log s - h(x) - \epsilon
 \end{align}
-using the fact that \(P(x) = \frac{p_i}{2^{r_p}}\). Finally, using \(s \geq
-2^{r_s - r_t}\),
-\begin{equation}
-  \log s' \geq \log s - h(x) + \log (1 - \epsilon)
-\end{equation}
-as required.
+as required, using the fact that \(P(x) = \frac{p_i}{2^{r}}\) and \(s \geq
+2^{r_s - r_t}\).
 
 By choosing \(r_s - r_t\) to be reasonably
 large (it is equal to 32 in our implementation), we ensure that
@@ -438,19 +450,20 @@ larger \(s\).
 
 \subsection{Pseudocode for \(d\)}
 We now have everything we need to write down a procedure to compute \(d\). We
-assume access to a function \(f_P:\bar{s}\mapsto a_i, c_i, p_i\), where \(i\)
-is defined above. This function clearly depends on the distribution \(P\), and
+assume access to a function \(f_X:\bar{s}\mapsto a_i, c_i, p_i\), where \(i\)
+is defined above. This function clearly depends on the distribution of \(X\), and
 its computational complexity is equivalent to that of computing the CDF and
-inverse CDF of \(P\). For many common distributions, the CDF and inverse CDF
+inverse CDF for \(X\). For many common distributions, the CDF and inverse CDF
 have straightforward closed form expressions, which don't require an explicit
 sum over \(i\).
 
+\pagebreak
 We compute \(d\) as follows:
-\begin{lstlisting}
+\begin{lstlisting}[frame=single]
 def $d$($s$):
-    $\bar s$ = $s\bmod 2^{r_p}$
-    $x$, $c$, $p$ = $f_P(\bar s)$
-    $s'$ = $p \cdot (s \div 2^{r_p}) + \bar s - c$
+    $\bar s$ := $s\bmod 2^{r}$
+    $x$, $c$, $p$ := $f_X(\bar s)$
+    $s'$ := $p \cdot (s \div 2^{r}) + \bar s - c$
     return $s'$, $x$
 \end{lstlisting}
 
@@ -466,17 +479,19 @@ of \(d\) on \(s\), returning a value of \(s\) identical to that before \pop\
 was applied.
 
 Thus, on a high level, the inverse of the function \pop\ can be expressed as
-\begin{lstlisting}
-def push(($s$, $t$), $x$):
-    $p$, $c$ = $g_P$($x$)
-    $s'$, $t$ = renorm_inverse($s$, $t$; $p$)
-    $s$ = $d^{-1}$($s'$; $p$, $c$)
+\begin{lstlisting}[frame=single]
+def push($m$, $x$):
+    $s$, $t$ := $m$
+    $p$, $c$ := $g_X$($x$)
+    $s'$, $t$ := renorm_inverse($s$, $t$; $p$)
+    $s$ := $d^{-1}$($s'$; $p$, $c$)
     return $s$, $t$
 \end{lstlisting}
-where \(g_P:x\mapsto p_i, c_i\) with \(i\) as above, similarly to \(f_P\) in
-that it is analagous to computing the quantized CDF and mass function \(P\).
-The function \(d^{-1}\) is really a pseudo-inverse of \(d\); it is the inverse
-of \(s\mapsto d(s, x)\), holding \(x\) fixed.
+where \(g_X:x\mapsto p_i, c_i\) with \(i\) as above. The function \(g_X\) is
+similar to \(f_X\) in that it is analogous to computing the quantized CDF and
+mass function \(x \mapsto p_i\).  The function \(d^{-1}\) is really a
+pseudo-inverse of \(d\); it is the inverse of \(s\mapsto d(s, x)\), holding
+\(x\) fixed.
 
 As mentioned above, \texttt{renorm\_inverse} must \texttt{stack\_push} the
 correct amount of data from the lower order bits of \(s\) into \(t\). A
@@ -492,36 +507,35 @@ The expression for \(s'\) in \cref{eq:s' def} is straightforward to invert,
 yielding a formula for
 \(d^{-1}\):
 \begin{equation}
-  d^{-1}(s'; p, c) = 2^{r_p} \cdot (s' \div p) + s' \bmod p + c
+  d^{-1}(s'; p, c) = 2^{r} \cdot (s' \div p) + s' \bmod p + c
 \end{equation}
 We can substitute this into \cref{eq:renorm_inverse_ineq} and simplify:
 \begin{align}
-  &2^{r_s - r_t} \leq 2^{r_p} \cdot (s' \div p) + s' \bmod p + c < 2^{r_s}\\
-  \iff&2^{r_s - r_t} \leq 2^{r_p} \cdot (s' \div p) < 2^{r_s}\\
-  \iff&p\cdot2^{r_s - r_t - r_p}\leq s' < p\cdot 2^{r_s -
-  r_p}\label{eq:simple-cond}
+      &&2^{r_s - r_t}            &\leq 2^{r} \cdot (s' \div p) + s' \bmod p + c < 2^{r_s}\\
+  \iff&&2^{r_s - r_t}            &\leq 2^{r} \cdot (s' \div p) < 2^{r_s}\\
+  \iff&&p\cdot2^{r_s - r_t - r}&\leq s' < p\cdot 2^{r_s - r}\label{eq:simple-cond}
 \end{align}
-Roughly speaking, \texttt{renorm\_inverse} should move data from the lower
-order bits of \(s'\) into \(t\) (decreasing \(s'\)) until \cref{eq:simple-cond}
-is satisfied. To be specific:
+So \texttt{renorm\_inverse} should move data from the lower order bits of
+\(s'\) into \(t\) (decreasing \(s'\)) until \cref{eq:simple-cond} is satisfied.
+To be specific:
 
-\begin{lstlisting}
-def renorm_inverse($s'$, $t$):
-    while $s' \geq p \cdot 2^{r_s - r_p}$:
-        $t$ = stack_push($t$, $s'\bmod 2^{r_t}$)
-        $s'$ = $s'\div 2^{r_t}$
+\begin{lstlisting}[frame=single]
+def renorm_inverse($s'$, $t$; $p$):
+    while $s' \geq p \cdot 2^{r_s - r}$:
+        $t$ := stack_push($t$, $s'\bmod 2^{r_t}$)
+        $s'$ := $s'\div 2^{r_t}$
     return $s'$, $t$
 \end{lstlisting}
 
-However, as mentioned above, although \cref{eq:simple-cond} is a
-\emph{necessary} condition which \(s'\) must satisfy, it isn't immediately
-clear that it's sufficient. Is it possible that we need to continue the while
-loop in \texttt{renorm\_inverse} past the first time that \(s'<p\cdot2^{r_s -
-r_p}\)? In fact this can't be the case, because \(s'\div2^{r_t}\) decreases
-\(s'\) by a factor of at least \(2^{r_t}\), and thus as we iterate the loop
-above we will land in the interval specified by \cref{eq:simple-cond} at most
-once. This guarantees that the \(s\) that we recover from
-\texttt{renorm\_inverse} is the correct one.
+Although, as mentioned above, \cref{eq:simple-cond} is a \emph{necessary}
+condition which \(s'\) must satisfy, it isn't immediately clear that it's
+sufficient. Is it possible that we need to continue the while loop in
+\texttt{renorm\_inverse} past the first time that \(s'<p\cdot2^{r_s - r}\)? In
+fact this can't be the case, because \(s'\div2^{r_t}\) decreases \(s'\) by a
+factor of at least \(2^{r_t}\), and thus as we iterate the loop above we will
+land in the interval specified by \cref{eq:simple-cond} at most once. This
+guarantees that the \(s\) that we recover from \texttt{renorm\_inverse} is the
+correct one.
 
 \section{Further reading}
 Since its invention by \citet{duda2009}, ANS appears not to have gained

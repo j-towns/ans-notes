@@ -1,6 +1,7 @@
 \usepackage{tikz}
 \usetikzlibrary{calc}
 \usetikzlibrary{math}
+\usetikzlibrary{decorations.pathreplacing}
 
 \newlength{\barwidth}
 \setlength{\barwidth}{0.5cm}
@@ -137,5 +138,33 @@
   \draw (0.875  \intervalwidth, -2\gap - 2\lineheight)
     node [text height=1ex] {\texttt{d}};
 
+\end{tikzpicture}
+}
+
+
+\newlength{\tbase}
+\setlength{\tbase}{-0cm}
+
+
+\newcommand{\drawmessage}{
+\begin{tikzpicture}
+  \node at (0, 0) (s) {\texttt{0110001001110010}};
+  % \draw [decorate,decoration={brace,amplitude=5pt,mirror}]
+  %   (-1.46, -0.4) -- (1.46, -0.4);
+  \node at (0, -0.85) {\large\(s\)};
+  \draw [{|-|}] (-1.5, 0.5) -- (1.5, 0.5);
+  \node at (0, 0.8) {\(r_s\)};
+
+  \node at (4.5, \tbase) {\texttt{01100010}};
+  \node at (4.5, \tbase + 11) {\texttt{10100011}};
+  \node at (4.5, \tbase + 30) {\(\vdots\)};
+  \node at (4.5, \tbase + 43) {\texttt{11011001}};
+  \draw [{|-|}] (4.5 - 0.75, \tbase + 58) -- (4.5 + 0.75, \tbase + 58);
+  \node at (4.5, \tbase + 66) {\(r_t\)};
+  % \draw [decorate,decoration={brace,amplitude=5pt,mirror}]
+  %   (4.5 - 0.75, \tbase - 0.4cm) -- (4.5 + 0.75, \tbase - 0.4cm);
+  \node at (4.5, -0.85) {\large\(t\)};
+  \draw [{|-|}] (4.5 + 1.2, \tbase - 4) -- (4.5 + 1.2, \tbase + 43 + 4);
+  \node at (4.5 + 1.6, \tbase + 21.5) {\(\abs{t}\)};
 \end{tikzpicture}
 }
