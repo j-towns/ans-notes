@@ -4,17 +4,17 @@ tutorial paper on rANS at https://arxiv.org/abs/2001.09186. The same variable
 names are used in this file as are used in the tutorial.
 
 We use the names `push` and `pop` for encoding and decoding respectively. The
-compressed state is a pair `m = (s, t)`, where `s` is an int in the range
-`[2 ** (s_prec - t_prec), 2 ** s_prec)` and `t` is an immutable stack,
-implemented using a cons list, containing ints in the range `[0, 2 ** t_prec)`
-(`prec` is short for 'precision'). The precisions must satisfy
+compressed message is a pair `m = (s, t)`, where `s` is an int in the range `[2
+** (s_prec - t_prec), 2 ** s_prec)` and `t` is an immutable stack, implemented
+using a cons list, containing ints in the range `[0, 2 ** t_prec)` (`prec` is
+short for 'precision'). The precisions must satisfy
 
   t_prec < s_prec.
 
 For convenient compatibility with C/Numpy types we use the settings
 s_prec = 64 and t_prec = 32.
 
-Both the `push` method and the `pop` method assume access to a probability
+Both the `push` function and the `pop` function assume access to a probability
 distribution over symbols. We use the name `x` for a symbol. To describe the
 probability distribution we model the real interval [0, 1] with the range of
 integers [0, 1, 2, ..., 2 ** p_prec]. Each symbol is represented by a
@@ -34,7 +34,7 @@ Each sub-interval can be represented by a pair of non-negative integers: `c`
 and `p`. As shown in the above diagram, the number `p` represents the width
 of the interval corresponding to `x`, so that
 
-  P(x) = p / 2 ** p_prec
+  P(x) == p / 2 ** p_prec
 
 where P is the probability mass function of our distribution.
 
@@ -58,27 +58,35 @@ s_prec = 64
 t_prec = 32
 t_mask = (1 << t_prec) - 1
 s_min  = 1 << s_prec - t_prec
+s_max  = 1 << s_prec
 
 #        s    , t
-m_init = s_min, ()
+m_init = s_min, ()  # Shortest possible message
 
 def rans(model):
     f, g, p_prec = model
     def push(m, x):
         s, t = m
         c, p = g(x)
+        # Invert renorm
         while s >= p << s_prec - p_prec:
             s, t = s >> t_prec, (t, s & t_mask)
-        return (s // p << p_prec) + s % p + c, t
+        # Invert d
+        s = (s // p << p_prec) + s % p + c
+        assert s_min <= s < s_max
+        return s, t
 
     def pop(m):
         s, t = m
+        # d(s)
         s_bar = s & ((1 << p_prec) - 1)
         x, (c, p) = f(s_bar)
         s = p * (s >> p_prec) + s_bar - c
+        # Renormalize
         while s < s_min:
             t, t_top = t
             s = (s << t_prec) + t_top
+        assert s_min <= s < s_max
         return (s, t), x
     return push, pop
 
@@ -102,7 +110,7 @@ if __name__ == "__main__":
     log = math.log2
 
     # We encode some data using the example model in the paper and verify the
-    # inequality in equation (7).
+    # inequality in equation (20).
 
     # First setup the model
     p_prec = 3
@@ -152,12 +160,15 @@ if __name__ == "__main__":
     for x in xs:
         m = push(m, x)
 
-    # Verify the inequality in eq (7)
-    eps = 2 ** (p_prec + t_prec - s_prec)
+    # Verify the inequality in eq (20)
+    eps = log(1 / (1 - 2 ** -(s_prec - p_prec - t_prec)))
+    print('eps = {:.2e}'.format(eps))
+    print()
+
     s, t = m
-    lhs = log(s_min)
-    rhs = log(s) - h + t_prec * len(flatten_stack(t)) + len(xs) * log(1 - eps)
-    print('Eq (7) inequality, lhs - rhs: {:.2e}'.format(lhs - rhs))
+    lhs = log(s) + t_prec * len(flatten_stack(t)) - log(s_min)
+    rhs = h + len(xs) * eps
+    print('Eq (20) inequality, rhs - lhs == {:.2e}'.format(rhs - lhs))
     print()
 
     # Decode the message, check that the decoded data matches original
@@ -174,4 +185,3 @@ if __name__ == "__main__":
     # Check that the message has been returned to its original state
     assert m == m_init
     print('Decode successful!')
-    print()
