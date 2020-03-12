@@ -53,9 +53,10 @@
   between ANS and AC is in the order in which data are \emph{decoded}: in ANS,
   compression is last-in-first-out (LIFO), or `stack-like', while in AC it is
   first-in-first-out (FIFO), or `queue-like'. We recommend
-  \cite[Chapter~4-6]{mackay2003} for background on source coding and arithmetic
-  coding in particular. In this paper we will focus solely on ANS, which as far
-  as we are aware is not covered by any existing textbooks.
+  \citet[Chapter~4-6]{mackay2003} for background on source coding and arithmetic
+  coding in particular. In this paper we will focus solely on ANS, which is not
+  covered in detail by existing textbooks (although \cite{mcanlis2016} does
+  briefly cover ANS).
 
   ANS comprises two basic functions, which we denote \push\ and \pop, for
   encoding and decoding, respectively (the names refer to the analogous stack
@@ -543,7 +544,8 @@ widespread attention in academic literature, despite being used in various
 state of the art compression systems. At the time of writing, a search on
 Google Scholar for the string ``asymmetric numeral systems" yields 148 results.
 For comparison, a search for ``arithmetic coding", yields `about 44,000'
-results. As far as I'm aware, ANS has not yet made it into any textbooks.
+results. As far as I'm aware, a detailed description of ANS has not yet made it
+into any textbooks, although \citet{mcanlis2016} does provide a brief overview.
 
 However, for those wanting to learn more there is a huge amount of material on
 different variants of ANS in \citet{duda2009} and \citet{duda2015}. A
@@ -556,5 +558,11 @@ Duda maintains a list of ANS implementations at
 \url{
   https://encode.su/
   threads/2078-List-of-Asymmetric-Numeral-Systems-implementations}.
+
+\subsection*{Acknowledgements}
+  Thanks to Tom Bird for feedback on drafts of this paper. Thanks also to
+  Szymon Grabowski for pointing out that ANS has in fact already made it into a
+  textbook.
+
 \printbibliography
 \end{document}
