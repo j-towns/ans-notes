@@ -41,29 +41,29 @@
     \splus = #1 + 1;
     \yunit = 12.5 / \splus;
   }
-  \draw[xstep=\barwidth, ystep=\yunit, lightgray, very thin]
-    (0, 0) grid (4 * \barwidth, 5.2);
+  % \draw[xstep=\barwidth, ystep=\yunit, lightgray, very thin]
+  %   (0, 0) grid (4 * \barwidth, 5.2);
     \drawaxes{s'}
   \foreach \y [parse=true, count=\s] in {\yunit, 2 * \yunit, ..., 5.2}{
     \ytick{\y}{}
     \draw (-.2cm, \y - \yunit / 2) node[anchor=east]
       {\pgfmathparse{int(\s - 1)}#2$\pgfmathresult$};
   }
-  \foreach \x/\freq/\start in {0/1/0, 1/2/1, 2/3/3, 3/2/6}{
-    \foreach \y [parse=true, count=\s] in {\yunit, 2 * \yunit, ..., 5.2}{
-      \tikzmath{
-        \snew = int(8 * int((\s - 1) / \freq) + mod((\s - 1), \freq) + \start);
-        if \snew>#1 then {\toprint = \snew;} else {let \toprint = ;};
-        }
-      \draw ($6.25/\splus*(0, -1) + 0.5*(\barwidth,0)
-      + \s*(0, 12.5 / \splus) + \x*(\barwidth, 0)$)
-      node [text=lightgray] {#2$\toprint$};
-    }
-  }
-  \drawbar{0\barwidth}{0.125}{thin, gray}
-  \drawbar{1\barwidth}{0.25} {thin, gray}
-  \drawbar{2\barwidth}{0.375}{thin, gray}
-  \drawbar{3\barwidth}{0.25} {thin, gray}
+  % \foreach \x/\freq/\start in {0/1/0, 1/2/1, 2/3/3, 3/2/6}{
+  %   \foreach \y [parse=true, count=\s] in {\yunit, 2 * \yunit, ..., 5.2}{
+  %     \tikzmath{
+  %       \snew = int(8 * int((\s - 1) / \freq) + mod((\s - 1), \freq) + \start);
+  %       if \snew>#1 then {\toprint = \snew;} else {let \toprint = ;};
+  %       }
+  %     \draw ($6.25/\splus*(0, -1) + 0.5*(\barwidth,0)
+  %     + \s*(0, 12.5 / \splus) + \x*(\barwidth, 0)$)
+  %     node [text=lightgray] {#2$\toprint$};
+  %   }
+  % }
+  % \drawbar{0\barwidth}{0.125}{thin, gray}
+  % \drawbar{1\barwidth}{0.25} {thin, gray}
+  % \drawbar{2\barwidth}{0.375}{thin, gray}
+  % \drawbar{3\barwidth}{0.25} {thin, gray}
   \foreach \x/\freq/\start in {0/1/0, 1/2/1, 2/3/3, 3/2/6}{
     \foreach \y [parse=true, count=\s] in {\yunit, 2 * \yunit, ..., 5.2}{
       \tikzmath{
