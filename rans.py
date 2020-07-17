@@ -70,7 +70,7 @@ def rans(model):
         c, p = g(x)
         # Invert renorm
         while s >= p << s_prec - p_prec:
-            s, t = s >> t_prec, (t, s & t_mask)
+            s, t = s >> t_prec, (s & t_mask, t)
         # Invert d
         s = (s // p << p_prec) + s % p + c
         assert s_min <= s < s_max
@@ -84,7 +84,7 @@ def rans(model):
         s = p * (s >> p_prec) + s_bar - c
         # Renormalize
         while s < s_min:
-            t, t_top = t
+            t_top, t = t
             s = (s << t_prec) + t_top
         assert s_min <= s < s_max
         return (s, t), x
@@ -93,14 +93,14 @@ def rans(model):
 def flatten_stack(t):
     flat = []
     while t:
-        t, t_top = t
+        t_top, t = t
         flat.append(t_top)
     return flat
 
 def unflatten_stack(flat):
     t = ()
     for t_top in reversed(flat):
-        t = t, t_top
+        t = t_top, t
     return t
 
 
