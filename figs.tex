@@ -4,34 +4,35 @@
 \usetikzlibrary{decorations.pathreplacing}
 
 \newlength{\barwidth}
-\setlength{\barwidth}{0.5cm}
+\setlength{\barwidth}{0.55cm}
 
 \newcommand{\drawaxes}[1]{
-  \draw [->] (-.2, 0) -> (4 * \barwidth + .2cm, 0) node[anchor=west] {$x$};
-  \draw [->] (-.2, 0) -> (-.2, 5.2) node[anchor=south] {$#1$};
-  \foreach \x in {0, ..., 4}
-    \draw (\x * \barwidth, -1pt) -- (\x * \barwidth, 0pt);
-    \foreach \x/\char in {0.5/a, 1.5/b, 2.5/c, 3.5/d}
+  \draw[gray]  (-.2, 0) -> (3.75 * \barwidth + .2cm, 0);
+  \draw                    (3.75 * \barwidth + .2cm, 0) node[anchor=west] {$x$};
+  \draw[gray]  (-.2, 0) -> (-.2, 5.2);
+  \draw                    (-.2, 5.2) node[anchor=south] {$#1$};
+  \foreach \x in {0.5, 1.5, 2.5, 3.5}
+    \draw[gray] (\x * \barwidth, -2pt) -- (\x * \barwidth, 0pt);
+  \foreach \x/\char in {0.5/a, 1.5/b, 2.5/c, 3.5/d}
     \draw (\x * \barwidth, 0) node[anchor=north, text height=8] {\texttt\char};
 }
 
 \newcommand{\ytick}[2]{% height, label
-  \draw (-.2cm - 1pt, #1) node[anchor=east] {#2} -- (-.2cm + 1pt, #1);
+  \draw[gray] (-.2cm - 2pt, #1) node[anchor=east, color=black] {#2} -- (-.2cm + 0pt, #1);
 }
 
 \newcommand{\drawbar}[3]{
-  \draw[#3] (#1, 0) -- (#1, 12.5cm * #2) -- (\barwidth + #1, 12.5cm * #2) --
-  (\barwidth + #1, 0);
+  \draw[#3] (#1, 0) -- (#1, 12.5cm * #2);
 }
 
 \newcommand{\drawpmf}{
 \begin{tikzpicture}
   \drawaxes{P(x)}
   \foreach \y in {0.125, 0.25, 0.375}{\ytick{12.5 * \y}{$\y$}}
-  \drawbar{0\barwidth}{0.125}{}
-  \drawbar{1\barwidth}{0.25}{}
-  \drawbar{2\barwidth}{0.375}{}
-  \drawbar{3\barwidth}{0.25}{}
+  \drawbar{0.5\barwidth}{0.125}{}
+  \drawbar{1.5\barwidth}{0.25}{}
+  \drawbar{2.5\barwidth}{0.375}{}
+  \drawbar{3.5\barwidth}{0.25}{}
 \end{tikzpicture}
 }
 

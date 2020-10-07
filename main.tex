@@ -130,8 +130,8 @@
   \end{align}
 
   Because it simplifies the presentation significantly, we focus first on the
-  ANS \emph{decoder}, that is the reverse mapping which maps from a compressed
-  binary message to the sequence \(x_1, \ldots, x_N\). This will be formed of a
+  ANS \emph{decoder}, the reverse mapping which maps from a compressed binary
+  message to the sequence \(x_1, \ldots, x_N\). This will be formed of a
   sequence of \(N\) \pop\ operations; starting with a message \(m_0\) we define
   \begin{align}
     m_n, x_n = \pop(m_{n-1})\qquad\text{for }n=1, \ldots, N.
@@ -163,7 +163,7 @@
 \subsection{The structure of the message}\label{sec:message}
   We use a pair \(m = (s, t)\) as the data structure for the message \(m\). The
   element \(s\) is an unsigned integer with precision \(r_s\) (i.e.\ \(s \in
-  \{0, 1, \ldots, 2^{r_s} - 1\}\), so that \(s\) can be expressed in a binary
+  \{0, 1, \ldots, 2^{r_s} - 1\}\), so that \(s\) can be expressed as a binary
   number with \(r_s\) bits). The element \(t\) is a stack of unsigned
   integers of some fixed precision \(r_t\) where \(r_t < r_s\).  This stack has
   its own push and pop operations, which we denote \(\texttt{stack\_push}\) and
@@ -218,7 +218,7 @@
   symbol from \(s\). We do this using a bijective function \(d:\mathbb
   N\rightarrow\mathbb N\times\mathcal{A}\), which takes an integer \(s\) as
   input and returns a pair \((s', x)\), where \(s'\) is an integer and \(x\) is
-  a symbol.  Thus \pop\ begins
+  a symbol. Thus \pop\ begins
   \begin{lstlisting}
 def pop($m$):
     $s$, $t$ := $m$
@@ -398,13 +398,17 @@ probability distribution, for the range \(s = 64,\ldots, 71\).
 
 \begin{figure}[ht]
   \centering
-  \drawpmf \quad \drawapprox{20}{\small} \quad \drawapprox{75}{\tiny}
+  \drawpmf \quad \drawapprox{20}{} \quad \drawapprox{75}{\tiny}
   \caption{
     Showing the pmf of a distribution over symbols (left) and a visualization
-    of the mapping \(d\) (middle and right).  Numbers less than or equal to
-    \(s\) are shown, for \(s=20\) and \(s=75\) (middle and right,
-    respectively), and the ratio in \cref{eq:ratio} can be seen to approach the
-    histogram in the left hand plot.
+    of the mapping \(d\) (middle and right). In the middle and right figures,
+    numbers less than or equal to \(s_\mathrm{max}\) are plotted, for
+    \(s_\mathrm{max}=20\) and \(s_\mathrm{max}=75\).  The position of each
+    number \(s\) is set to the coordinates \((x, s')\), where \(s', x = d(s)\).
+    The heights of the bars are thus determined by the ratio \(s'/s\) from
+    \cref{eq:ratio}, and can be seen to approach the heights of the lines in
+    the histogram on the left (that is, to approach \(P(x)\)) as the density of
+    numbers increases.
   }\label{fig:visual-ans}
 \end{figure}
 
@@ -451,7 +455,7 @@ larger \(s\).
 
 \subsection{Pseudocode for \(d\)}
 We now have everything we need to write down a procedure to compute \(d\). We
-assume access to a function \(f_X:\bar{s}\mapsto a_i, c_i, p_i\), where \(i\)
+assume access to a function \(f_X:\bar{s}\mapsto (a_i, c_i, p_i)\), where \(i\)
 is defined above. This function clearly depends on the distribution of \(X\), and
 its computational complexity is equivalent to that of computing the CDF and
 inverse CDF for \(X\). For many common distributions, the CDF and inverse CDF
@@ -488,7 +492,7 @@ def push($m$, $x$):
     $s$ := $d^{-1}$($s'$; $p$, $c$)
     return $s$, $t$
 \end{lstlisting}
-where \(g_X:x\mapsto p_i, c_i\) with \(i\) as above. The function \(g_X\) is
+where \(g_X:x\mapsto (p_i, c_i)\) with \(i\) as above. The function \(g_X\) is
 similar to \(f_X\) in that it is analogous to computing the quantized CDF and
 mass function \(x \mapsto p_i\).  The function \(d^{-1}\) is really a
 pseudo-inverse of \(d\); it is the inverse of \(s\mapsto d(s, x)\), holding
@@ -544,8 +548,8 @@ widespread attention in academic literature, despite being used in various
 state of the art compression systems. At the time of writing, a search on
 Google Scholar for the string ``asymmetric numeral systems" yields 148 results.
 For comparison, a search for ``arithmetic coding", yields `about 44,000'
-results. As far as I'm aware, a detailed description of ANS has not yet made it
-into any textbooks, although \citet{mcanlis2016} does provide a brief overview.
+results. As far as I'm aware, ANS has appeared in only one textbook, with a
+practical, rather than mathematical, presentation \citep{mcanlis2016}.
 
 However, for those wanting to learn more there is a huge amount of material on
 different variants of ANS in \citet{duda2009} and \citet{duda2015}. A
