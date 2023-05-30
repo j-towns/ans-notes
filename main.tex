@@ -514,17 +514,19 @@ yielding a formula for
 \begin{equation}
   d^{-1}(s'; p, c) = 2^{r} \cdot (s' \div p) + s' \bmod p + c
 \end{equation}
-We can substitute this into \cref{eq:renorm_inverse_ineq}:
-\begin{equation}
-  2^{r_s - r_t} \leq 2^{r} \cdot (s' \div p) + s' \bmod p + c < 2^{r_s}\label{eq:simple-cond}
-\end{equation}
+We can substitute this into \cref{eq:renorm_inverse_ineq} and simplify:
+\begin{align}
+      &&2^{r_s - r_t}            &\leq 2^{r} \cdot (s' \div p) + s' \bmod p + c < 2^{r_s}\\
+  \iff&&2^{r_s - r_t}            &\leq 2^{r} \cdot (s' \div p) < 2^{r_s}\\
+  \iff&&p\cdot2^{r_s - r_t - r}&\leq s' < p\cdot 2^{r_s - r}\label{eq:simple-cond}
+\end{align}
 So \texttt{renorm\_inverse} should move data from the lower order bits of
 \(s'\) into \(t\) (decreasing \(s'\)) until \cref{eq:simple-cond} is satisfied.
 To be specific:
 
 \begin{lstlisting}[frame=single]
-def renorm_inverse($s'$, $t$; $p$, $c$):
-    while $2^{r} \cdot (s' \div p) + s' \bmod p + c \geq 2^{r_s}$:
+def renorm_inverse($s'$, $t$; $p$):
+    while $s' \geq p \cdot 2^{r_s - r}$:
         $t$ := stack_push($t$, $s'\bmod 2^{r_t}$)
         $s'$ := $s'\div 2^{r_t}$
     return $s'$, $t$
