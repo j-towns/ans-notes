@@ -68,13 +68,13 @@ def rans(model):
     def push(m, x):
         s, t = m
         c, p = g(x)
-        # Invert renorm
-        while s >= p << s_prec - p_prec:
+        # Invert renorm & d
+        s_r = (s // p << p_prec) + s % p + c
+        while s_r >= s_max:
             s, t = s >> t_prec, (s & t_mask, t)
-        # Invert d
-        s = (s // p << p_prec) + s % p + c
-        assert s_min <= s < s_max
-        return s, t
+            s_r = (s // p << p_prec) + s % p + c
+        assert s_min <= s_r < s_max
+        return s_r, t
 
     def pop(m):
         s, t = m
