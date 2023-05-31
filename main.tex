@@ -521,7 +521,7 @@ We can substitute this into \cref{eq:renorm_inverse_ineq} and simplify:
   \Rightarrow&& s' \div p &< 2^{r_s - r} - (s' \bmod p + c)2^{-r}\label{eq:simple-cond}
 \end{align}
 So \texttt{renorm\_inverse} should move data from the lower order bits of
-\(s'\) into \(t\) (decreasing \(s'\)) until \cref{eq:simple-cond}, which is necessary for \cref{eq:o-simple-cond}, is satisfied.
+\(s'\) into \(t\) (decreasing \(s'\)) until \cref{eq:simple-cond}, which is equivalent to the right inequality of \cref{eq:o-simple-cond}, is satisfied.
 To be specific:
 
 \begin{lstlisting}[frame=single]
