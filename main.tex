@@ -516,29 +516,29 @@ yielding a formula for
 \end{equation}
 We can substitute this into \cref{eq:renorm_inverse_ineq} and simplify:
 \begin{align}
-      &&2^{r_s - r_t}            &\leq 2^{r} \cdot (s' \div p) + s' \bmod p + c < 2^{r_s}\\
-  \iff&&2^{r_s - r_t}            &\leq 2^{r} \cdot (s' \div p) < 2^{r_s}\\
-  \iff&&p\cdot2^{r_s - r_t - r}&\leq s' < p\cdot 2^{r_s - r}\label{eq:simple-cond}
+      &&2^{r_s - r_t}            \leq 2^{r} \cdot (s' \div p) + s' \bmod p + c &< 2^{r_s}\label{eq:o-simple-cond}\\
+  \Rightarrow&& 2^{r} \cdot (s' \div p) &< 2^{r_s} - s' \bmod p - c \\
+  \Rightarrow&& s' \div p &< 2^{r_s - r} - (s' \bmod p + c)2^{-r}\label{eq:simple-cond}
 \end{align}
 So \texttt{renorm\_inverse} should move data from the lower order bits of
-\(s'\) into \(t\) (decreasing \(s'\)) until \cref{eq:simple-cond} is satisfied.
+\(s'\) into \(t\) (decreasing \(s'\)) until \cref{eq:simple-cond}, which is necessary for \cref{eq:o-simple-cond}, is satisfied.
 To be specific:
 
 \begin{lstlisting}[frame=single]
-def renorm_inverse($s'$, $t$; $p$):
-    while $s' \geq p \cdot 2^{r_s - r}$:
+def renorm_inverse($s'$, $t$; $p$, $c$):
+    while $s' \div p \geq 2^{r_s - r} - (s' \bmod p + c)2^{-r}$:
         $t$ := stack_push($t$, $s'\bmod 2^{r_t}$)
         $s'$ := $s'\div 2^{r_t}$
     return $s'$, $t$
 \end{lstlisting}
 
-Although, as mentioned above, \cref{eq:simple-cond} is a \emph{necessary}
+Although, as mentioned above, \cref{eq:o-simple-cond} is a \emph{necessary}
 condition which \(s'\) must satisfy, it isn't immediately clear that it's
 sufficient. Is it possible that we need to continue the while loop in
 \texttt{renorm\_inverse} past the first time that \(s'<p\cdot2^{r_s - r}\)? In
 fact this can't be the case, because \(s'\div2^{r_t}\) decreases \(s'\) by a
 factor of at least \(2^{r_t}\), and thus as we iterate the loop above we will
-land in the interval specified by \cref{eq:simple-cond} at most once. This
+land in the interval specified by \cref{eq:o-simple-cond} at most once. This
 guarantees that the \(s\) that we recover from \texttt{renorm\_inverse} is the
 correct one.
 
