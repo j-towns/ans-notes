@@ -183,5 +183,5 @@ if __name__ == "__main__":
         assert x_orig == x_new
 
     # Check that the message has been returned to its original state
-    # assert m == m_init
+    assert m == m_init
     print('Decode successful!')
